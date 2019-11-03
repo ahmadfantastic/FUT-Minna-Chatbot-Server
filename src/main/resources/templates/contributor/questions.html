@@ -1,0 +1,312 @@
+<div class="fixed-action-btn">
+    <a class="btn-floating btn-large blue">
+        <i class="large material-icons">add</i>
+    </a>
+    <ul>
+        <li th:if="${me.type.name() != 'REGULAR'}">
+            <a class="btn-floating green tooltipped" data-position="left" data-tooltip="Broadcast Message">
+                <i class="material-icons">rss_feed</i>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="showAddEditModal('Question', false, '/images/avatar.png', false, false)" class="btn-floating red tooltipped" data-position="left" data-tooltip="Add New Question">
+                <i class="material-icons">live_help</i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div class="row no-pd">
+    <ul id="tabs-swipe-demo" class="tabs tabs-icon">
+        <li class="tab col s3">
+            <a href="#answered_section" class="green-text"><i class="material-icons">done_all</i>Answered</a>
+        </li>
+        <li class="tab col s3">
+            <a href="#approved_section" class="blue-text"><i class="material-icons">done</i>Approved</a>
+        </li>
+        <li class="tab col s3" th:if="${me.type.name() != 'REGULAR'}">
+            <a class="orange-text" href="#requested_section"><i class=" material-icons">new_releases</i>Requested</a>
+        </li>
+        <li class="tab col s3">
+            <a class="red-text active" href="#new_section"><i class=" material-icons">fiber_new</i>New</a>
+        </li>
+    </ul>
+</div>
+
+<!-- ANSWERED SECTION -->
+<div id="answered_section" class="col s12">
+    <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'APPROVED' && question.answer != null}">
+        <div class="row">
+            <h5 th:text='${question.body}' class="col s10 m11 flow-text"></h5>
+            <p class="col s2 m1" th:if="${me.type.name() == 'SUPER'}">
+                <a href="#" th:onclick="showAddEditModal('Question', JSON.parse(/*[[${question.toJSON()}]]*/), '/images/avatar.png', false, false)" >
+                    <i class="material-icons blue-text">edit</i>
+                </a>
+            </p>
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${question.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                    <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Question Tag', 'Remove', '/contributor/delete/question_tag/[[${question.id}]]/[[${tag.id}]]')">
+                        <i class="material-icons red-text normal">close</i>
+                    </a>
+                </div>
+                <div class="chip purple lighten-3" th:if="${me.type.name() == 'SUPER'}">
+                    <a href='#' th:onclick='showAddEditModal("Question Tag", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"question\": [[${question.id}]]}"))'>
+                        <span class="white-text">Add Tag</span>
+                        <i class="material-icons white-text normal">add</i>
+                    </a>
+                </div>
+                <div class="chip green">
+                    <a class='modal-trigger' href='#page_modal' th:onclick='load("_contributor_answer_[[${question.id}]]", {"embed": "yes"}, "page");'>
+                        <span class="white-text">View Answer</span>
+                        <i class="material-icons white-text normal">visibility</i>
+                    </a>
+                </div>
+                <div class="chip blue" th:if="${me.type.name() == 'SUPER'}">
+                    <a href="#" th:onclick='updateLink("answer_edit_[[${question.id}]]"); load("_contributor_answer_edit_[[${question.id}]]", {"embed": "yes"}, "content");'>
+                        <span class="white-text">Edit Answer</span>
+                        <i class="material-icons white-text normal">edit</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${question.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + question.contributor.firstName + ' ' + question.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF ANSWERED SECTION -->
+
+<!-- APPROVED SECTION -->
+<div id="approved_section" class="col s12">
+    <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'APPROVED' && question.answer == null}">
+        <div class="row">
+            <h5 th:text='${question.body}' class="col s10 m11 flow-text"></h5>
+            <p class="col s2 m1" th:if="${me.type.name() == 'SUPER'}">
+                <a href="#" th:onclick="showAddEditModal('Question', JSON.parse(/*[[${question.toJSON()}]]*/), '/images/avatar.png', false, false)" >
+                    <i class="material-icons blue-text">edit</i>
+                </a>
+            </p>
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${question.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                    <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Question Tag', 'Remove', '/contributor/delete/question_tag/[[${question.id}]]/[[${tag.id}]]')">
+                        <i class="material-icons red-text normal">close</i>
+                    </a>
+                </div>
+                <div class="chip blue" th:if="${me.type.name() == 'SUPER'}">
+                    <a href='#' th:onclick='showAddEditModal("Question Tag", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"question\": [[${question.id}]]}"))'>
+                        <span class="white-text">Add Tag</span>
+                        <i class="material-icons white-text normal">add</i>
+                    </a>
+                </div>
+                <i class="material-icons purple-text left" th:if="${question.type.name() == 'BROADCAST'}">rss_feed</i>
+                <div class="chip green">
+                    <a href='#' th:onclick='updateLink("answers_[[${question.id}]]"); load("_contributor_answers_[[${question.id}]]", {"embed": "yes"}, "content");'>
+                        <span class="white-text">View Answers</span>
+                        <i class="material-icons white-text normal">visibility</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${question.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + question.contributor.firstName + ' ' + question.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF APPROVED SECTION -->
+
+<!-- REQUESTED SECTION -->
+<div id="requested_section" class="col s12" th:if="${me.type.name() != 'REGULAR'}">
+    <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'REQUESTED'}">
+        <div class="row">
+            <h5 th:text='${question.body}' class="col s12 flow-text"></h5>
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${question.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div th:if='${me.type.name() == "SUPER" || me != question.contributor}' class="chip red">
+                    <a href='#' th:onclick="showConfirmModal('Question', 'Reject', '/contributor/save/update_question_status/[[${question.id}]]/3')">
+                        <span class="white-text">Reject</span>
+                        <i class="material-icons white-text normal">cancel</i>
+                    </a>
+                </div>
+                <div th:if='${me.type.name() == "SUPER" || me != question.contributor}' class="chip green">
+                    <a href='#' th:onclick="showConfirmModal('Question', 'Approve', '/contributor/save/update_question_status/[[${question.id}]]/2')">
+                        <span class="white-text">Approve</span>
+                        <i class="material-icons white-text normal">check</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${question.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + question.contributor.firstName + ' ' + question.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF REQUESTED SECTION -->
+
+<!-- NEW SECTION -->
+<div id="new_section" class="col s12">
+    <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'CREATED' && question.contributor == me}">
+        <div class="row">
+            <h5 th:text='${question.body}' class="col s8 m10 flow-text"></h5>
+            <p class="col s2 m1">
+                <a href="#" th:onclick="showAddEditModal('Question', JSON.parse(/*[[${question.toJSON()}]]*/), '/images/avatar.png', false, false)" >
+                    <i class="material-icons blue-text">edit</i>
+                </a>
+            </p>
+            <p class="col s2 m1">
+                <a href="#" th:onclick="showConfirmModal('Question', 'Delete', '/contributor/delete/question/[[${question.id}]]')">
+                    <i class="material-icons red-text">delete</i>
+                </a>
+            </p>
+
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${question.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                    <a href="#" th:onclick="showConfirmModal('Question Tag', 'Remove', '/contributor/delete/question_tag/[[${tag.id}]]')">
+                        <i class="material-icons red-text normal">close</i>
+                    </a>
+                </div>
+                <div class="chip blue">
+                    <a href='#' th:onclick='showAddEditModal("Questions Tag", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"question\": [[${question.id}]]}"))'>
+                        <span class="white-text">Add Tag</span>
+                        <i class="material-icons white-text normal">add</i>
+                    </a>
+                </div>
+                <div class="chip green">
+                    <a href='#' th:onclick="showConfirmModal('Question', 'Send Approval Request', '/contributor/save/update_question_status/[[${question.id}]]/1')">
+                        <span class="white-text">Send</span>
+                        <i class="material-icons white-text normal">send</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${question.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + question.contributor.firstName + ' ' + question.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF NEW SECTION -->
+
+<div id="add_edit_modal" class="modal modal-fixed-footer">
+    <form id="add_edit_form" class="row" method="post" th:action="@{/contributor/save/question}">
+        <div class="modal-content container">
+            <h4 id='add_edit_label' class="col s12 purple-text center-align"></h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <textarea placeholder="Question" class='materialize-textarea' data-length="255" name='body' id='body' required=""></textarea>
+                </div>
+            </div>
+
+            <div class='row'>
+                <div class="input-field col s12 purple-text">
+                    <i class="material-icons prefix">arrow_drop_down_circle</i>
+                    <select id='expiry' name="expiry" required="">
+                        <option value="" disabled selected="">Choose your option</option>
+                        <option value="HOUR">Expires in an hour</option>
+                        <option value="DAY">Expires at the end of today</option>
+                        <option value="WEEK">Expires at the end of the week</option>
+                        <option value="MONTH">Expires at the end of the month</option>
+                        <option value="SEMESTER">Expires at the end of the semester</option>
+                        <option value="SESSION">Expires at the end of the session</option>
+                        <option value="NEVER">Never Expires</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub_add_edit_form" class="row" method="post" th:action="@{/contributor/save/question_tag}">
+        <div class="modal-content container">
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <input id='question' name="question" type="hidden" value='-1' hidden='' required=""/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Tag" class='autocomplete' name='tag_name' id='tag_name' required="" autocomplete="off"/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm_modal" class="modal">
+    <div class="modal-content">
+        <h4 class="blue-text">Confirmation !!!</h4>
+        <h6 id="confirm_modal_message">This action is cannot be undone</h6>
+        <h6 class="red-text">This action is cannot be undone</h6>
+    </div>
+    <div class="modal-footer">
+        <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i>No</a>
+        <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
+    </div>
+</div>
+
+<div id="page_modal" class="modal bottom-sheet">
+    <div class="modal-content">
+        <div id='page' class="row"></div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+        $('select').formSelect();
+        $('.tabs').tabs();
+        $('textarea').characterCounter();
+        $('.tooltipped').tooltip();
+        var tags = [];
+        var counter = 0;
+        /*[# th:each="tag : ${tags}"]*/
+        tags[counter++] = /*[[${tag.name}]]*/'';
+        /*[/]*/
+        var data = {};
+        for(var i in tags){
+            data[tags[i]] = "/images/tag.png";
+        }
+        $('input.autocomplete').autocomplete({
+            data: data
+        });
+    });
+</script>

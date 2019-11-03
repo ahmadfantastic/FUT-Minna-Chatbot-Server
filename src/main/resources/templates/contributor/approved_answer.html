@@ -1,0 +1,41 @@
+<div class='col s12' th:replace="contributor/answer_details :: answerDetails(questionId=${question.id},optionId=-1, answer=${question.answer}, isDone=${true}, IMG_BASE=${IMG_BASE}, isFinalized=${'yes'})">
+    <!-- Answer Details Will be loaded here -->
+</div>
+
+<h6 th:if="${question.answer.options.size() > 0}" class="col s12 purple-text" style="text-decoration: underline; ">Options:</h6>
+<ul th:if='${question.answer.options.size() > 0}' class="collapsible row">
+    <li th:each="option1 : ${question.answer.options}">
+        <div class="collapsible-header purple lighten-5" style="padding: 8px;">
+            <div class="col s12 valign-wrapper" style="padding: 0px;">
+                <i class="material-icons purple-text" style="margin: 0px;">navigate_next</i>
+                <span th:text="${option1.preferenceValue == null ? option1.text: option1.preferenceValue.value}"></span>
+            </div>
+        </div>
+        <div class="collapsible-body" style="padding-top: 0.5rem">
+            <div class="row" th:insert="contributor/answer_details :: answerDetails(questionId=-1, optionId=${option1.id}, answer=${option1.childAnswer}, isDone=${true})">
+                <!-- Answer Details Will be loaded here -->
+            </div>
+            <h6 th:if="${option1.childAnswer != null && option1.childAnswer.options.size() > 0}" class="col s12 purple-text" style="text-decoration: underline; ">Options:</h6>
+            <ul class="collapsible" th:if="${option1.childAnswer != null && option1.childAnswer.options.size() > 0}">
+                <li th:each="option2 : ${option1.childAnswer.options}">
+                    <div class="collapsible-header purple lighten-5" style="padding: 8px;">
+                        <div class="col s12 valign-wrapper" style="padding: 0px;">
+                            <i class="material-icons purple-text" style="margin: 0px;">navigate_next</i>
+                            <span th:text="${option2.preferenceValue == null ? option2.text: option2.preferenceValue.value}"></span>
+                        </div>
+                    </div>
+                    <div class="collapsible-body" style="padding-top: 0.5rem">
+                        <div class="row" th:insert="contributor/answer_details :: answerDetails(questionId=-1, optionId=${option2.id}, answer=${option2.childAnswer}, disAllow=true, isDone=${true})">
+                            <!-- Answer Details Will be loaded here -->
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </li>
+</ul>
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('.collapsible').collapsible();
+    });
+</script>

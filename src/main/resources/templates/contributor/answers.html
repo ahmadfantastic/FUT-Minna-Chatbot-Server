@@ -1,0 +1,337 @@
+<div class="row no-pd">
+    <ul id="tabs-swipe-demo" class="tabs tabs-icon">
+        <li class="tab col s8">
+            <a href="#submitted_section" class="green-text "><i class="material-icons">apps</i>Submitted Answers</a>
+        </li>
+        <li class="tab col s4">
+            <a href="#mine_section" class="blue-text active"><i class="material-icons">nature_people</i>Mine</a>
+        </li>
+    </ul>
+</div>
+<!-- All SECTION -->
+<div id="submitted_section" class="col s12">
+    <div class='row' th:each='answer : ${answers}' th:classappend="${answer.options.size() > 0 ? '':'card'}">
+        <div class='col s12' th:replace="contributor/answer_details :: answerDetails(questionId=${question.id},
+             optionId=-1, answer=${answer}, isDone=${true}, me=${me}, showApprove=${true}, IMG_BASE=${IMG_BASE})">
+            <!-- Answer Details Will be loaded here -->
+        </div>
+
+        <h6 th:if="${answer.options.size() > 0}" class="col s12 purple-text" style="text-decoration: underline; ">Options:</h6>
+        <ul th:if='${answer.options.size() > 0}' class="collapsible">
+            <li th:each="option1 : ${answer.options}">
+                <div class="collapsible-header purple lighten-5" style="padding: 8px;">
+                    <div class="col s12 valign-wrapper" style="padding: 0px;">
+                        <i class="material-icons purple-text" style="margin: 0px;">navigate_next</i>
+                        <span th:text="${option1.preferenceValue == null ? option1.text: option1.preferenceValue.value}"></span>
+                    </div>
+                </div>
+                <div class="collapsible-body" style="padding-top: 0.5rem">
+                    <div class="row" th:insert="contributor/answer_details :: answerDetails(questionId=-1, optionId=${option1.id}, answer=${option1.childAnswer}, isDone=${true})">
+                        <!-- Answer Details Will be loaded here -->
+                    </div>
+                    <h6 th:if="${option1.childAnswer != null && option1.childAnswer.options.size() > 0}" class="col s12 purple-text" style="text-decoration: underline; ">Options:</h6>
+                    <ul class="collapsible row" th:if="${option1.childAnswer != null && option1.childAnswer.options.size() > 0}">
+                        <li th:each="option2 : ${option1.childAnswer.options}">
+                            <div class="collapsible-header purple lighten-5" style="padding: 8px;">
+                                <div class="col s12 valign-wrapper" style="padding: 0px;">
+                                    <i class="material-icons purple-text" style="margin: 0px;">navigate_next</i>
+                                    <span th:text="${option2.preferenceValue == null ? option2.text: option2.preferenceValue.value}"></span>
+                                </div>
+                            </div>
+                            <div class="collapsible-body" style="padding-top: 0.5rem">
+                                <div class="row" th:insert="contributor/answer_details :: answerDetails(questionId=-1, optionId=${option2.id}, answer=${option2.childAnswer}, disAllow=true, isDone=${true})">
+                                    <!-- Answer Details Will be loaded here -->
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>
+<!-- END OF all SECTION -->
+
+<!-- Mine SECTION -->
+<div id="mine_section" class="col s12" th:with="isDone=${(mine == null || mine.status.name() == 'CREATED') ? false:true}">
+    <div class='row card' th:insert="contributor/answer_details :: answerDetails(questionId=${question.id}, optionId=-1, answer=${mine}, isDone=${isDone})">
+        <!-- Answer Details Will be loaded here -->
+    </div>
+
+    <h6 th:if="${mine != null && mine.options.size() > 0}" class="col s12 purple-text" style="text-decoration: underline; ">Options:</h6>
+    <ul class="collapsible row" th:if="${mine != null && mine.options.size() > 0}">
+        <li th:each="option1 : ${mine.options}">
+            <div class="collapsible-header purple lighten-5" style="padding: 8px;">
+                <div class="col valign-wrapper" style="padding: 0px;" th:classappend="${option1.preferenceValue == null? 's9 m10': 's12'}">
+                    <i class="material-icons purple-text" style="margin: 0px;">navigate_next</i>
+                    <span th:text="${option1.preferenceValue == null ? option1.text: option1.preferenceValue.value}"></span>
+                </div>
+                <div class="col s3 m2 right right-align" style="padding: 0px;"  th:if="${option1.preferenceValue == null}">
+                    <a th:if='${!isDone}' href="#" th:onclick='showAddEditModal("Option", JSON.parse(/*[[${option1.toJSON()}]]*/), "/images/avatar.png", "sub2_add_edit", JSON.parse("{\"parentAnswer\": [[${option1.parentAnswer.id}]]}"))' >
+                        <i class="material-icons blue-text" style="margin: 0px;">edit</i>
+                    </a>
+                    <a th:if='${!isDone}' href="#" th:onclick="showConfirmModal('Option', 'Remove', '/contributor/delete/option/[[${option1.id}]]')">
+                        <i class="material-icons red-text" style="margin: 0px;">delete</i>
+                    </a>
+                </div>
+            </div>
+            <div class="collapsible-body" style="padding-top: 0.5rem">
+                <div class="row" th:insert="contributor/answer_details :: answerDetails(questionId=-1, optionId=${option1.id}, answer=${option1.childAnswer}, isDone=${isDone})">
+                    <!-- Answer Details Will be loaded here -->
+                </div>
+                <h6 th:if="${option1.childAnswer != null && option1.childAnswer.options.size() > 0}" class="col s12 purple-text" style="text-decoration: underline; ">Options:</h6>
+                <ul class="collapsible row" th:if="${option1.childAnswer != null && option1.childAnswer.options.size() > 0}">
+                    <li th:each="option2 : ${option1.childAnswer.options}">
+                        <div class="collapsible-header purple lighten-5" style="padding: 8px;">
+                            <div class="col valign-wrapper" style="padding: 0px;" th:classappend="${option2.preferenceValue == null && me.type.name() == 'SUPER'? 's9 m10': 's12'}">
+                                <i class="material-icons purple-text" style="margin: 0px;">navigate_next</i>
+                                <span th:text="${option2.preferenceValue == null ? option2.text: option2.preferenceValue.value}"></span>
+                            </div>
+                            <div class="col s3 m2 right right-align" style="padding: 0px;" th:if="${option2.preferenceValue == null && me.type.name() == 'SUPER'}">
+                                <a th:if='${!isDone}' href="#" th:onclick='showAddEditModal("Option", JSON.parse(/*[[${option2.toJSON()}]]*/), "/images/avatar.png", "sub2_add_edit", JSON.parse("{\"parentAnswer\": [[${option2.parentAnswer.id}]]}"))' >
+                                    <i class="material-icons blue-text" style="margin: 0px;">edit</i>
+                                </a>
+                                <a th:if='${!isDone}' href="#" th:onclick="showConfirmModal('Option', 'Remove', '/contributor/delete/option/[[${option2.id}]]')">
+                                    <i class="material-icons red-text" style="margin: 0px;">delete</i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="collapsible-body" style="padding-top: 0.5rem">
+                            <div class="row" th:insert="contributor/answer_details :: answerDetails(questionId=-1, optionId=${option2.id}, answer=${option2.childAnswer}, disAllow=true, isDone=${isDone})">
+                                <!-- Answer Details Will be loaded here -->
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>
+<!-- End of Mine SECTION -->
+
+<div id="add_edit_modal" class="modal modal-fixed-footer">
+    <form id="add_edit_form" class="row" method="post" th:action="@{'/contributor/save/answer/' + ${question.id}}">
+        <div class="modal-content container">
+            <h4 id='add_edit_label' class="col s12 purple-text center-align"></h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <input type="hidden" id='question' name="question" value='-1' hidden=''/>
+            <input id='option' name="option" type="hidden" value='-1' hidden='' required=""/>
+            <div class='row' id="text_based">
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <textarea placeholder="Answer Body" class='materialize-textarea' data-length="255" name='body' id='body'></textarea>
+                </div>
+            </div>
+            <div class='row' id="preference_based">
+                <div class="input-field col s12 purple-text">
+                    <i class="material-icons prefix">arrow_drop_down_circle</i>
+                    <select id='preference' name="preference" onchange="updateDataDisplay();">
+                        <option value="" disabled selected="">Choose a Preference</option>
+                        <option th:each="preference : ${preferences}" th:value="${preference.id}" th:text="${preference.name}"></option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub_add_edit_form" class="row" method="post" th:action="@{'/contributor/save/extra/' + ${question.id}}">
+        <div class="modal-content">
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <input id='answer' name="answer" type="hidden" value='-1' hidden='' required=""/>
+
+            <div class='row'>
+                <div class="input-field col s12 m8 purple-text">
+                    <i class="material-icons prefix">arrow_drop_down_circle</i>
+                    <select id='type' name="type" required="" onchange="updateDataDisplay();">
+                        <option value="" disabled selected="">Choose your option</option>
+                        <option value="IMAGE" data-icon="/images/image.png">Image Extra</option>
+                        <option value="AUDIO" data-icon="/images/audio.png">Audio Extra</option>
+                        <option value="VIDEO" data-icon="/images/video.png">YouTube Video</option>
+                        <option value="LOCATION" data-icon="/images/location.png">Google Map Location</option>
+                        <option value="LINK" data-icon="/images/link.png">Web Page Link</option>
+                        <option value="EMAIL" data-icon="/images/email.png">Email Address</option>
+                        <option value="PHONE" data-icon="/images/phone.png">Phone Number</option>
+                        <option value="WHATSAPP" data-icon="/images/whatsapp.png">WhatsApp Number</option>
+                    </select>
+                </div>
+                <div id="link_body" class='input-field col s12 m4 purple-text'>
+                    <a id="link_link" href="#" target="_blank" class="btn blue white-text waves-effect waves-light">
+                        <i class="material-icons left" id="link_icon">cloud</i>
+                        <span id="link_text">Goto Google Maps</span>
+                    </a>
+                </div>
+                <div id="data_body" class='input-field col s12 purple-text'>
+                    <input class='validate' name='data' id='data' type="text" required="" autocomplete="off"/>
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub2_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub2_add_edit_form" class="row" method="post" th:action="@{'/contributor/save/option/' + ${question.id}}">
+        <div class="modal-content container">
+            <h4 id='sub2_add_edit_label' class="col s12 purple-text center-align"></h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <input type="hidden" id='parentAnswer' name="parentAnswer" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Option Name" class='materialize-textarea' data-length="50" maxlength="50" name='text' id='text' required=""/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub2_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm_modal" class="modal">
+    <div class="modal-content">
+        <h4 class="blue-text">Confirmation !!!</h4>
+        <h6 id="confirm_modal_message">This action is cannot be undone</h6>
+        <h6 class="red-text">This action is cannot be undone</h6>
+    </div>
+    <div class="modal-footer">
+        <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i>No</a>
+        <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('.collapsible').collapsible();
+        $('.materialboxed').materialbox();
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+        $('select').formSelect();
+        $('.tabs').tabs();
+        $('textarea').characterCounter();
+        $('.tooltipped').tooltip();
+    });
+    
+    function updateAddDetails(showPreference){
+        if(showPreference){
+            $("#text_based").hide();
+            $("#preference_based").show();
+        }else{
+            $("#text_based").show();
+            $("#preference_based").hide();
+        }
+    }
+
+    function updateDataDisplay() {
+        var value = $("#type").val();
+        $("#data").val("");
+        $("#data_body").show();
+        $("#link_body").show();
+        if (value === "IMAGE") {
+            $("#link_link").prop("href", "https://images.google.com/");
+            $("#link_text").html("Google Images");
+            $("#link_icon").html("image");
+
+            $("#data").attr("placeholder", "Image URL Here");
+            $("#data").prop("type", "url");
+            $("#data").attr("data-length", "255");
+            $("#data").attr("minlength", "5");
+            $("#data").attr("maxlength", "255");
+            $('input#data').characterCounter();
+        } else if (value === "AUDIO") {
+            $("#link_link").prop("href", "https://google.com/");
+            $("#link_text").html("Google Search");
+            $("#link_icon").html("audiotrack");
+
+            $("#data").attr("placeholder", "Audio URL Here");
+            $("#data").prop("type", "url");
+            $("#data").attr("data-length", "255");
+            $("#data").attr("minlength", "5");
+            $("#data").attr("maxlength", "255");
+            $('input#data').characterCounter();
+        } else if (value === "VIDEO") {
+            $("#link_link").prop("href", "https://www.youtube.com");
+            $("#link_text").html("YouTube");
+            $("#link_icon").html("ondemand_video");
+
+            $("#data").attr("placeholder", "Youtube Video URL Here");
+            $("#data").prop("type", "url");
+            $("#data").attr("data-length", "255");
+            $("#data").attr("minlength", "5");
+            $("#data").attr("maxlength", "255");
+            $('input#data').characterCounter();
+        } else if (value === "LOCATION") {
+            $("#link_link").prop("href", "https://maps.google.com/");
+            $("#link_text").html("Google Maps");
+            $("#link_icon").html("location_on");
+
+            $("#data").attr("placeholder", "Google Map URL Here");
+            $("#data").prop("type", "url");
+            $("#data").attr("data-length", "255");
+            $("#data").attr("minlength", "5");
+            $("#data").attr("maxlength", "255");
+            $('input#data').characterCounter();
+        } else if (value === "LINK") {
+            $("#link_link").prop("href", "https://google.com/");
+            $("#link_text").html("Google Search");
+            $("#link_icon").html("insert_link");
+
+            $("#data").attr("placeholder", "Web Page URL Here");
+            $("#data").prop("type", "url");
+            $("#data").attr("data-length", "255");
+            $("#data").attr("minlength", "5");
+            $("#data").attr("maxlength", "255");
+            $('input#data').characterCounter();
+        } else if (value === "EMAIL") {
+            $("#link_link").prop("href", "https://gmail.com/");
+            $("#link_text").html("Gmail");
+            $("#link_icon").html("email");
+
+            $("#data").attr("placeholder", "Email Address Here");
+            $("#data").prop("type", "email");
+            $("#data").attr("data-length", "255");
+            $("#data").attr("minlength", "5");
+            $("#data").attr("maxlength", "255");
+            $('input#data').characterCounter();
+        } else if (value === "PHONE") {
+            $("#link_link").prop("href", "https://contacts.google.com/");
+            $("#link_text").html("Google Contacts");
+            $("#link_icon").html("call");
+
+            $("#data").attr("placeholder", "Phone Number Here");
+            $("#data").attr("data-length", "11");
+            $("#data").attr("minlength", "11");
+            $("#data").attr("maxlength", "11");
+            $("#data").prop("type", "tel");
+            $('input#data').characterCounter();
+        } else if (value === "WHATSAPP") {
+            $("#link_link").prop("href", "https://wa.me/");
+            $("#link_text").html("WhatsApp");
+            $("#link_icon").html("contacts");
+
+            $("#data").attr("placeholder", "WhatsApp Number Here");
+            $("#data").attr("data-length", "11");
+            $("#data").attr("minlength", "11");
+            $("#data").attr("maxlength", "11");
+            $("#data").prop("type", "tel");
+            $('input#data').characterCounter();
+        } else {
+            $("#data_body").hide();
+            $("#link_body").hide();
+        }
+    }
+</script>

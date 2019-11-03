@@ -1,0 +1,72 @@
+<h3 class='col s12 center-align purple-text'><i class="purple-text material-icons">build</i> Tags</h3>
+
+<div class="fixed-action-btn"  th:if="${me.type.name() == 'SUPER'}">
+    <a href="#" onclick="showAddEditModal('Tag', false, '/images/avatar.png', false, false)" class="btn-floating btn btn-large blue waves-effect">
+        <i class="large material-icons">add</i>
+    </a>
+</div>
+
+<div class="row">
+    <div class="col s12">
+        <div class="chip" th:each="tag : ${tags}">
+            <i class="material-icons amber-text normal left">local_offer</i>
+            <span th:utext="${tag.name + ' <b class=green-text>' + tag.questions.size() + '</b>'}" class="black-text"></span>
+            <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Tag', 'Delete', '/contributor/delete/tag/[[${tag.id}]]')">
+                <i class="material-icons red-text normal">delete</i>
+            </a>
+            <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick='showAddEditModal("Tag", JSON.parse(/*[[${tag.toJSON()}]]*/), "/images/avatar.png", false, false)'>
+                <i class="material-icons blue-text normal">edit</i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="add_edit_modal" class="modal modal-fixed-footer"  th:if="${me.type.name() == 'SUPER'}">
+    <form id="add_edit_form" class="row" method="post" th:action="@{/contributor/save/tag}">
+        <div class="modal-content container">
+            <h4 id='add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Tag Name" class='autocomplete' name='name' id='name' required="" autocomplete="off"/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm_modal" class="modal"  th:if="${me.type.name() == 'SUPER'}">
+    <div class="modal-content">
+        <h4 class="blue-text">Confirmation !!!</h4>
+        <h6 id="confirm_modal_message">This action is cannot be undone</h6>
+        <h6 class="red-text">This action is cannot be undone</h6>
+    </div>
+    <div class="modal-footer">
+        <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i>No</a>
+        <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
+    </div>
+</div>
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+        var tags = [];
+        var counter = 0;
+        /*[# th:each="tag : ${tags}"]*/
+        tags[counter++] = /*[[${tag.name}]]*/'';
+        /*[/]*/
+        var data = {};
+        for(var i in tags){
+            data[tags[i]] = "/images/tag.png";
+        }
+        $('input.autocomplete').autocomplete({
+            data: data
+        });
+    });
+</script>

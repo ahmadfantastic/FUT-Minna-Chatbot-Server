@@ -1,0 +1,114 @@
+<h3 class='col s12 center-align purple-text'><i class="purple-text material-icons">build</i> Preferences</h3>
+
+<div class="fixed-action-btn" th:if="${me.type.name() == 'SUPER'}">
+    <a href="#" onclick="showAddEditModal('Preference', false, '/images/avatar.png', false, false)" class="btn-floating btn btn-large blue waves-effect">
+        <i class="large material-icons">add</i>
+    </a>
+</div>
+
+<div th:each="preference : ${preferences}" class='card col s12'>
+    <div class="row">
+        <h5 th:text='${preference.name}' class="col s8 m10 flow-text" th:classappend="${me.type.name() == 'SUPER' ? 's8 m10':'s12'}"></h5>
+        <p class="col s2 m1"  th:if="${me.type.name() == 'SUPER'}">
+            <a href="#" th:onclick="showAddEditModal('Preference', JSON.parse(/*[[${preference.toJSON()}]]*/), 'images/avatar.png', false, false)" >
+                <i class="material-icons blue-text">edit</i>
+            </a>
+        </p>
+        <p class="col s2 m1" th:if="${me.type.name() == 'SUPER'}">
+            <a href="#" th:onclick="showConfirmModal('Preference', 'Delete', '/contributor/delete/preference/[[${preference.id}]]')">
+                <i class="material-icons red-text">delete</i>
+            </a>
+        </p>
+        <div class="col s12" th:if="${preference.type.name() == 'PREDEFINED'}">
+            <div class="chip" th:each="value : ${preference.values}">
+                <span th:text="${value.value}" class="purple-text text-darken-4"></span>
+                <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Preference Value', 'Delete', '/contributor/delete/preference_value/[[${value.id}]]')">
+                    <i class="material-icons red-text normal">delete</i>
+                </a>
+                <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick='showAddEditModal("Preference Value", JSON.parse(/*[[${value.toJSON()}]]*/), "/images/avatar.png", "sub_add_edit", JSON.parse("{\"preference\": [[${preference.id}]]}"))'>
+                    <i class="material-icons blue-text normal">edit</i>
+                </a>
+            </div>
+            <div class="chip blue" th:if="${me.type.name() == 'SUPER'}">
+                <a href='#' th:onclick='showAddEditModal("Preference Value", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"preference\": [[${preference.id}]]}"))'>
+                    <span class="white-text">Add</span>
+                    <i class="material-icons white-text normal">add</i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <p class="col s12 blue-text valign-wrapper" th:if="${preference.type.name() == 'USER_DEFINED'}">
+        <i class="material-icons">input</i> Open Ended
+    </p>
+</div>
+
+<div id="add_edit_modal" class="modal modal-fixed-footer" th:if="${me.type.name() == 'SUPER'}">
+    <form id="add_edit_form" class="row" method="post" th:action="@{/contributor/save/preference}">
+        <div class="modal-content container">
+            <h4 id='add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Preference name" class='validate' type='text' name='name' id='name' required=""/>
+                </div>
+            </div>
+
+            <div class='row'>
+                <div class="input-field col s12 purple-text">
+                    <i class="material-icons prefix">arrow_drop_down_circle</i>
+                    <select id='type' name="type" required="">
+                        <option value="" disabled selected="">Choose your option</option>
+                        <option value="PREDEFINED">Predefined Values</option>
+                        <option value="USER_DEFINED">User Defined Values</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub_add_edit_modal" class="modal modal-fixed-footer" th:if="${me.type.name() == 'SUPER'}">
+    <form id="sub_add_edit_form" class="row" method="post" th:action="@{/contributor/save/preference_value}">
+        <div class="modal-content container">
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <input id='preference' name="preference" type="hidden" value='-1' hidden='' required=""/>
+            <input type="hidden" id='id' name="id" value='-1' hidden='' required=""/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Preference value" class='validate' type='text' name='value' id='value' required=""/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm_modal" class="modal"  th:if="${me.type.name() == 'SUPER'}">
+    <div class="modal-content">
+        <h4 class="blue-text">Confirmation !!!</h4>
+        <h6 id="confirm_modal_message">This action is cannot be undone</h6>
+        <h6 class="red-text">This action is cannot be undone</h6>
+    </div>
+    <div class="modal-footer">
+        <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i>No</a>
+        <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+        $('select').formSelect();
+    });
+</script>

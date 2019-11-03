@@ -1,0 +1,87 @@
+<div th:fragment="answerDetails(questionId, optionId, answer)">
+    <h5 th:utext='${answer == null ? "<b>[</b>Not Provided<b>]</b>": (answer.preference == null ? answer.body: answer.preference.name)}' class="col flow-text" th:classappend="${(isDone == false) ? 's9 m10':'s12'}"></h5>
+    <p class="col s3 m2 right-align" th:if="${isDone == false}">
+        <a th:if="${!(answer != null && answer.preference != null)}" href="#" th:onclick='updateAddDetails(false),showAddEditModal("Answer", JSON.parse(/*[[${answer == null ? null : answer.toJSON()}]]*/)
+           , "/images/avatar.png", false, JSON.parse("{\"question\": [[${questionId}]], \"option\": [[${optionId}]]}"))' >
+            <i class="material-icons blue-text">edit</i>
+        </a>
+        <a th:if="${answer == null}" href="#" th:onclick='updateAddDetails(true),showAddEditModal("Answer", JSON.parse(/*[[${answer == null ? null : answer.toJSON()}]]*/)
+           , "/images/avatar.png", false, JSON.parse("{\"question\": [[${questionId}]], \"option\": [[${optionId}]]}"))'>
+            <i class="material-icons orange-text">archive</i>
+        </a>
+        <a th:if="${answer != null}" href="#" th:onclick="showConfirmModal('Answer', 'Delete', '/contributor/delete/answer/[[${answer.id}]]')">
+            <i class="material-icons red-text">delete</i>
+        </a>
+    </p>
+    <div class="col s12" th:if="${answer != null}">
+        <div class="chip" th:each="extra : ${answer.extras}" th:switch="${extra.type.name()}">
+            <img th:src="@{'/images/' + ${#strings.toLowerCase(extra.type.name())} + '.png'}"/>
+            <a th:if="${isDone == false}" href="#" th:onclick="showConfirmModal('Image Extra', 'Remove', '/contributor/delete/extra/[[${extra.id}]]')">
+                <i class="material-icons red-text normal">close</i>
+            </a>
+            <a target="_blank" th:case="IMAGE" th:href="${extra.data}">
+                Image
+            </a>
+            <a target="_blank" th:case="AUDIO" th:href="${extra.data}">
+                Audio
+            </a>
+            <a target="_blank" th:case="VIDEO" th:href="${extra.data}">
+                Video
+            </a>
+            <a target="_blank" th:case="LOCATION" th:href="${extra.data}">
+                Location
+            </a>
+            <a target="_blank" th:case="LINK" th:href="${extra.data}">
+                Link
+            </a>
+            <a th:case="EMAIL" th:href="${'mailto:' + extra.data}">
+                Email
+            </a>
+            <a th:case="PHONE" th:href="${'tel:+234' + #strings.substring(extra.data, 1)}">
+                Phone
+            </a>
+            <a th:case="WHATSAPP" th:href="${'https://wa.me/:+234' + #strings.substring(extra.data, 1)}">
+                WhatsApp
+            </a>
+        </div>
+
+        <div class="chip blue" th:if="${answer.extras.size() <= 3 && isDone == false}">
+            <a href='#' th:onclick='showAddEditModal("Answer Extra", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"answer\": [[${answer.id}]]}"))'>
+                <span class="white-text">Add Extra</span>
+                <i class="material-icons white-text normal">add</i>
+            </a>
+        </div>
+
+        <div class="chip orange" th:if="${answer.options.size() <= 3 && disAllow == null && isDone == false && answer.preference == null}">
+            <a href='#' th:onclick='showAddEditModal("Answer Option", false, "/images/avatar.png", "sub2_add_edit", JSON.parse("{\"parentAnswer\": [[${answer.id}]]}"))'>
+                <span class="white-text">Add Option</span>
+                <i class="material-icons white-text normal">add</i>
+            </a>
+        </div>
+
+        <div class="chip green" th:if="${answer.option == null && isDone == false && isFinalized == null }">
+            <a href='#' th:onclick="showConfirmModal('Answer', 'Send Approval Request', '/contributor/save/update_answer_status/[[${answer.id}]]/1')">
+                <span class="white-text">Send</span>
+                <i class="material-icons white-text normal">send</i>
+            </a>
+        </div>
+        
+        <div class="chip green" th:if="${showApprove != null && (me.type.name()=='SUPER' || me != answer.contributor)}">
+            <a href='#' th:onclick="showConfirmModal('Answer', 'Approve', '/contributor/save/approve_answer/[[${answer.id}]]')">
+                <span class="white-text">Approve</span>
+                <i class="material-icons white-text normal">check</i>
+            </a>
+        </div>
+
+        <div class="chip right" th:if="${answer != null && answer.approvedBy != null && IMG_BASE != null}">
+            <img th:src="${IMG_BASE + answer.approvedBy.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+            <i style="text-overflow: ellipsis;  overflow: hidden" class=" black-text" th:utext="${'<b>Approved By:</b> ' + answer.approvedBy.firstName}"></i>
+        </div>
+
+        <div class="chip right" th:if="${answer != null && answer.question != null && IMG_BASE != null}">
+            <img th:src="${IMG_BASE + answer.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+            <i style="text-overflow: ellipsis;  overflow: hidden" class="black-text" th:utext="${'<b>By:</b> ' + answer.contributor.firstName + ' ' + answer.contributor.lastName}"></i>
+        </div>
+        
+    </div>
+</div>
