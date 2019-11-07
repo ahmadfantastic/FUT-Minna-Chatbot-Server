@@ -7,6 +7,7 @@ package com.fut.chatbot.model;
 
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,6 +38,7 @@ public class PreferenceValue {
     private Preference preference;
     
     @Expose
+    @Column(length = 50)
     private String value;
 
     public PreferenceValue() {

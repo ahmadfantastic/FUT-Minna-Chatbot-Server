@@ -1,12 +1,10 @@
 package com.fut.chatbot.websocket;
 
-import com.fut.chatbot.repo.UserRepo;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.converter.MessageConverter;
@@ -30,13 +28,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/chatbot-web-socket", "/send").setHandshakeHandler(
+        registry.addEndpoint("/chatbot-web-socket", "/send", "/delivery", "/online").setHandshakeHandler(
                 new AssignPrincipalHandshakeHandler()).withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/tag", "/reply");
+        config.enableSimpleBroker("/reply");
         config.setUserDestinationPrefix("/private");
     }
 

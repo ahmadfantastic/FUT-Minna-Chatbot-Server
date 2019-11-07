@@ -5,7 +5,11 @@
  */
 package com.fut.chatbot.repo;
 
+import com.fut.chatbot.model.Broadcast;
 import com.fut.chatbot.model.Message;
+import com.fut.chatbot.model.Poll;
+import com.fut.chatbot.model.User;
+import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -13,5 +17,10 @@ import org.springframework.data.repository.CrudRepository;
  * @author ahmad
  */
 public interface MessageRepo extends CrudRepository<Message, Integer>{
+ 
+    List<Message> findAllByPoll(Poll poll);
     
+    List<Message> findAllByBroadcast(Broadcast broadcast);
+    
+    List<Message> findAllByUser(User user);
 }

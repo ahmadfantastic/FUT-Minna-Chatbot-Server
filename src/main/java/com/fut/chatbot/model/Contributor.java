@@ -7,11 +7,15 @@ package com.fut.chatbot.model;
 
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
-import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import jdk.nashorn.internal.ir.annotations.Ignore;
@@ -39,28 +43,37 @@ public class Contributor {
     private int id;
 
     @Expose
+    @Column(length = 50)
     private String firstName;
 
     @Expose
+    @Column(length = 50)
     private String lastName;
 
     @Expose
+    @Column(length = 100)
     private String imageUrl;
 
     @Expose
+    @Column(length = 50)
     private String email;
 
     @Expose
+    @Column(length = 50)
     private String password;
 
     @Expose
-    private LocalDateTime registrationDate;
+    private Date registrationDate;
 
     @Expose
     private ContributorType type;
 
     @Expose
     private ContributorStatus status;
+            
+    @Expose
+    @OneToMany(mappedBy = "contributor", cascade = CascadeType.REMOVE)
+    private List<ContributorTag> tags;
 
     public Contributor() {
     }
@@ -113,11 +126,11 @@ public class Contributor {
         this.password = password;
     }
 
-    public LocalDateTime getRegistrationDate() {
+    public Date getRegistrationDate() {
         return registrationDate;
     }
 
-    public void setRegistrationDate(LocalDateTime registrationDate) {
+    public void setRegistrationDate(Date registrationDate) {
         this.registrationDate = registrationDate;
     }
 
@@ -137,8 +150,16 @@ public class Contributor {
         this.status = status;
     }
 
+    public List<ContributorTag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<ContributorTag> tags) {
+        this.tags = tags;
+    }
+
     @Ignore
-    public String toJSON(){
+    public String toJSON() {
         return Constants.GSON_EXPOSE.toJson(this);
     }
 }

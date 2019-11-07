@@ -1,0 +1,28 @@
+<h3 class="purple-text center">Possible Conflicts</h3>
+<h5 class="center grey-text" th:text="${'(' + question.body + ')'}"></h5>
+<di class="col s12">
+    <div th:each="searchItem : ${searchItems}" class='card col s12'>
+        <div class="row">
+            <blockquote th:text='${searchItem.question.body}' class="col s10 m11 flow-text"></blockquote>
+            <h5 th:text="${#numbers.formatDecimal(searchItem.score, 1, 'COMMA', 2, 'POINT')}" class="col s2 m1 flow-text pink-text"></h5>
+            <div class="col s12">
+                <div class="chip left" th:classappend="${searchItem.score > 0.8 ? 'red':'blue'}">
+                    <span class="white-text" th:text="${searchItem.score > 0.8 ? 'VERY SIMILAR':'SIMILAR'}"></span>
+                    <i class="material-icons normal white-text">error</i>
+                </div>
+                <div class="chip" th:each="tag : ${searchItem.question.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${searchItem.question.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + searchItem.question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + searchItem.question.contributor.firstName + ' ' + searchItem.question.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

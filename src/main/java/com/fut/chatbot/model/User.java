@@ -7,6 +7,7 @@ package com.fut.chatbot.model;
 
 import com.google.gson.annotations.Expose;
 import java.util.List;
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,8 +20,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  *
@@ -37,19 +36,26 @@ public class User {
     private int id;
 
     @Expose
+    @Column(length = 50)
     private String name;
 
     @Expose
+    @Column(length = 5)
     private String code;
 
     @Expose
-    @Column(unique = true)
+    @Column(unique = true, length = 11)
     private String phone;
 
     @Expose
     @Fetch(value = FetchMode.SUBSELECT)
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<UserPreference> preferences;
+
+    @Expose
+    @Fetch(value = FetchMode.SUBSELECT)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    private List<UserTag> tags;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     private List<Feedback> feedbacks;
@@ -93,6 +99,14 @@ public class User {
         return preferences;
     }
 
+    public List<UserTag> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<UserTag> tags) {
+        this.tags = tags;
+    }
+
     public void setPreferences(List<UserPreference> preferences) {
         this.preferences = preferences;
     }
@@ -105,4 +119,34 @@ public class User {
         this.feedbacks = feedbacks;
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 67 * hash + this.id;
+        hash = 67 * hash + Objects.hashCode(this.phone);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final User other = (User) obj;
+        if (this.id != other.id) {
+            return false;
+        }
+        if (!Objects.equals(this.phone, other.phone)) {
+            return false;
+        }
+        return true;
+    }
+
+    
 }

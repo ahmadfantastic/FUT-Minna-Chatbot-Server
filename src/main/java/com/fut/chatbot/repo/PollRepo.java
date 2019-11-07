@@ -6,6 +6,7 @@
 package com.fut.chatbot.repo;
 
 import com.fut.chatbot.model.Poll;
+import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -14,4 +15,5 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface PollRepo extends CrudRepository<Poll, Integer>{
     
+    List<Poll> findAllByStatus(Poll.PollStatus status);
 }

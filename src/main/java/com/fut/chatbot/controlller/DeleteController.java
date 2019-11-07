@@ -48,6 +48,18 @@ public class DeleteController {
     UserPreferenceRepo userPreferenceRepo;
     @Autowired
     UserRepo userRepo;
+    @Autowired
+    ContributorTagRepo contributorTagRepo;
+    @Autowired
+    BroadcastRepo broadcastRepo;
+    @Autowired
+    BroadcastTagRepo broadcastTagRepo;
+    @Autowired
+    PollTagRepo pollTagRepo;
+    @Autowired
+    PollRepo pollRepo;
+    @Autowired
+    PollItemRepo pollItemRepo;
 
     @RequestMapping("preference/{id}")
     public String deletePreference(HttpSession session, Model model, @PathVariable("id") int preferenceId) {
@@ -126,6 +138,46 @@ public class DeleteController {
         return "redirect:/contributor/questions";
     }
 
+    @RequestMapping("broadcast/{id}")
+    public String deleteBroadcast(HttpSession session, Model model, @PathVariable("id") int broadcastId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        if (broadcastRepo.existsById(broadcastId)) {
+            Broadcast broadcast = broadcastRepo.findById(broadcastId).get();
+            broadcast.getTags().forEach((broadcastTag) -> {
+                broadcastTagRepo.delete(broadcastTag);
+            });
+            broadcastRepo.delete(broadcast);
+            session.setAttribute("success", "Broadcast Deleted Successfully");
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/broadcasts";
+    }
+
+    @RequestMapping("poll/{id}")
+    public String deletePoll(HttpSession session, Model model, @PathVariable("id") int pollId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        if (pollRepo.existsById(pollId)) {
+            Poll poll = pollRepo.findById(pollId).get();
+            poll.getTags().forEach((pollTag) -> {
+                pollTagRepo.delete(pollTag);
+            });
+            pollRepo.delete(poll);
+            session.setAttribute("success", "Poll Deleted Successfully");
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/polls";
+    }
+
     @RequestMapping("answer/{id}")
     public String deleteAnswer(HttpSession session, Model model, @PathVariable("id") int answerId) {
         int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
@@ -143,7 +195,6 @@ public class DeleteController {
         return "redirect:/contributor";
     }
 
-    
     @RequestMapping("question_tag/{id}")
     public String deleteQuestionTag(HttpSession session, Model model, @PathVariable("id") int questionTagId) {
         int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
@@ -161,6 +212,60 @@ public class DeleteController {
         return "redirect:/contributor/questions";
     }
 
+    @RequestMapping("broadcast_tag/{id}")
+    public String deleteBroadcastTag(HttpSession session, Model model, @PathVariable("id") int broadcastTagId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        if (broadcastTagRepo.existsById(broadcastTagId)) {
+            BroadcastTag broadcasttag = broadcastTagRepo.findById(broadcastTagId).get();
+            broadcastTagRepo.delete(broadcasttag);
+            session.setAttribute("success", "Tag Removed from Broadcast Successfully");
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/broadcasts";
+    }
+
+    @RequestMapping("poll_tag/{id}")
+    public String deletePollTag(HttpSession session, Model model, @PathVariable("id") int pollTagId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        if (pollTagRepo.existsById(pollTagId)) {
+            PollTag polltag = pollTagRepo.findById(pollTagId).get();
+            pollTagRepo.delete(polltag);
+            session.setAttribute("success", "Tag Removed from Poll Successfully");
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/polls";
+    }
+
+    @RequestMapping("contributor_tag/{id}")
+    public String deleteContributorTag(HttpSession session, Model model, @PathVariable("id") int contributorTagId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (contributor.getType() != Contributor.ContributorType.SUPER) {
+            session.setAttribute("error", "Access Denied");
+        } else if (contributorTagRepo.existsById(contributorTagId)) {
+            ContributorTag contributortag = contributorTagRepo.findById(contributorTagId).get();
+            contributorTagRepo.delete(contributortag);
+            session.setAttribute("success", "Tag Removed from Contributor Successfully");
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/contributors";
+    }
+
     @RequestMapping("extra/{id}")
     public String deleteExtra(HttpSession session, Model model, @PathVariable("id") int extraId) {
         int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
@@ -172,6 +277,27 @@ public class DeleteController {
             Extra extra = extraRepo.findById(extraId).get();
             extraRepo.delete(extra);
             session.setAttribute("success", "Extra Removed Successfully");
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/";
+    }
+
+    @RequestMapping("poll_item/{id}")
+    public String deletePollItem(HttpSession session, Model model, @PathVariable("id") int pollItemId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        if (pollItemRepo.existsById(pollItemId)) {
+            PollItem pollItem = pollItemRepo.findById(pollItemId).get();
+            if (pollItem.getPoll().getStatus() != Poll.PollStatus.CREATED) {
+                session.setAttribute("error", "Cannot Delete a Poll Item of sent Poll");
+            } else {
+                pollItemRepo.delete(pollItem);
+                session.setAttribute("success", "Poll Item Removed Successfully");
+            }
         } else {
             session.setAttribute("error", "Invalid Field(s)");
         }

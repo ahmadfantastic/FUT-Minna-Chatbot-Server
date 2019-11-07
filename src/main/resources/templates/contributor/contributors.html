@@ -11,31 +11,46 @@
         <div class="card-image"> 
             <img class="materialboxed" th:src="${IMG_BASE + contributor.imageUrl}" onerror="this.src='/images/background.jpg'" height="250">
             <span style="font-weight: bolder; color: white; text-shadow: -1px 0 purple, 0 1px purple, 1px 0 purple, 0 -1px purple;" class="card-title" th:text="${contributor.firstName + ' ' + contributor.lastName}"></span>
-            <a class="btn-floating halfway-fab waves-effect waves-light purple" th:onclick="showAddEditModal('Contributor', JSON.parse(/*[[${contributor.toJSON()}]]*/), [[${IMG_BASE + contributor.imageUrl}]], false, false)">
+            <a class="btn-floating halfway-fab waves-effect waves-light purple left" th:onclick="showAddEditModal('Contributor', JSON.parse(/*[[${contributor.toJSON()}]]*/), [[${IMG_BASE + contributor.imageUrl}]], false, false)">
                 <i class="material-icons">edit</i>
             </a>
+            <a class="btn-floating halfway-fab waves-effect waves-light white activator">
+                <i class="material-icons black-text">more_vert</i>
+            </a>
         </div>
-        <div class="card-stacked">
-            <div class="card-content">
-                <div class="valign-wrapper">
-                    <i class="blue-text material-icons">email</i>
-                    <span class="" th:text="${contributor.email}"></span>
-                </div>
+        <div class="card-content">
+            <div class="valign-wrapper">
+                <i class="blue-text material-icons">email</i>
+                <span class="activator" th:text="${contributor.email}"></span>
             </div>
-            <div class="card-action row" style="font-size: 13px;">
-
-                <div class="valign-wrapper orange-text col s6">
-                    <i class="material-icons">accessibility</i>
-                    <span th:text="${contributor.type}"></span>
-                </div>
-                <div class="valign-wrapper col s6" th:with="isActive=${contributor.status.name() == 'ACTIVE'}">
-                    <a class="valign-wrapper" href="#" th:classappend="${isActive ? 'red-text':'green-text'}" th:if="${contributor.type.name() == 'SUPER' ? 'false': 'true'}"
-                       th:onclick="showConfirmModal('Contributor', [[${isActive ? 'BLOCK': 'UNBLOCK'}]], '/contributor/save/contributor/update_status/[[${contributor.id}]]/[[${(isActive ? 2 : 1)}]]')">
-                        <i class="material-icons" th:classappend="${isActive ? 'red-text':'green-text'}" th:text="${isActive ? 'block': 'assignment_turned_in'}">block</i>
-                        <span th:text="${isActive ? 'BLOCK': 'UNBLOCK'}"></span>
-                    </a>
-                </div>
-
+        </div>
+        <div class="card-reveal">
+            <span class="card-title grey-text text-darken-4">Tag Details<i class="material-icons right">close</i></span>
+            <div class="chip" th:each="tag : ${contributor.tags}">
+                <i class="material-icons amber-text normal">local_offer</i>
+                <span th:text="${tag.tag.name}" class="black-text"></span>
+                <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Contributor Tag', 'Remove', '/contributor/delete/contributor_tag/[[${tag.id}]]')">
+                    <i class="material-icons red-text normal">close</i>
+                </a>
+            </div>
+            <div class="chip purple lighten-3" th:if="${me.type.name() == 'SUPER'}">
+                <a href='#' th:onclick='showAddEditModal("Contributor Tag", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"contributor\": [[${contributor.id}]]}"))'>
+                    <span class="white-text">Add Tag</span>
+                    <i class="material-icons white-text normal">add</i>
+                </a>
+            </div>
+            <div class="" th:with="isActive=${contributor.status.name() == 'ACTIVE'}">
+                <a class="valign-wrapper" href="#" th:classappend="${isActive ? 'red-text':'green-text'}" th:if="${contributor.type.name() == 'SUPER' ? 'false': 'true'}"
+                   th:onclick="showConfirmModal('Contributor', [[${isActive ? 'BLOCK': 'UNBLOCK'}]], '/contributor/save/contributor/update_status/[[${contributor.id}]]/[[${(isActive ? 2 : 1)}]]')">
+                    <i class="material-icons" th:classappend="${isActive ? 'red-text':'green-text'}" th:text="${isActive ? 'block': 'assignment_turned_in'}">block</i>
+                    <span th:text="${isActive ? 'BLOCK': 'UNBLOCK'}"></span>
+                </a>
+            </div>
+        </div>
+        <div class="card-action" th:with="isActive=${contributor.status.name() == 'ACTIVE'}">
+            <div>Type: 
+                <span class="orange-text" th:text="${contributor.type}"></span>
+                (<span th:class="${isActive ? 'green-text': 'red-text'}" th:text="${isActive ? 'Active': 'Blocked'}"></span>)
             </div>
         </div>
     </div>
@@ -95,6 +110,26 @@
     </form>
 </div>
 
+<div id="sub_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub_add_edit_form" class="row" method="post" th:action="@{/contributor/save/contributor_tag}">
+        <div class="modal-content container">
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <input id='contributor' name="contributor" type="hidden" value='-1' hidden='' required=""/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Tag" class='autocomplete' name='tag_name' id='tag_name' required="" autocomplete="off"/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
 <div id="confirm_modal" class="modal">
     <div class="modal-content">
         <h4 class="blue-text">Confirmation !!!</h4>
@@ -106,11 +141,22 @@
         <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
     </div>
 </div>
-<script>
+<script th:inline="javascript">
     $(document).ready(function () {
         $('.materialboxed').materialbox();
         $('.fixed-action-btn').floatingActionButton();
         $('.modal').modal();
-        $('select').formSelect();
+        $('select').formSelect();var tags = [];
+        var counter = 0;
+        /*[# th:each="tag : ${tags}"]*/
+        tags[counter++] = /*[[${tag.name}]]*/'';
+        /*[/]*/
+        var data = {};
+        for (var i in tags) {
+            data[tags[i]] = "/images/tag.png";
+        }
+        $('input.autocomplete').autocomplete({
+            data: data
+        });
     });
 </script>

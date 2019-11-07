@@ -10,6 +10,7 @@ import com.google.gson.annotations.Expose;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,7 +32,11 @@ import jdk.nashorn.internal.ir.annotations.Ignore;
 public class Poll {
 
     public enum PollStatus {
-        CREATED, REQUESTED, APPROVED
+        CREATED, REQUESTED, PROGRESS, FINISHED
+    };
+
+    public enum PollExpiry {
+        DAY, DAY_3, WEEK,
     };
 
     @Id
@@ -40,11 +45,19 @@ public class Poll {
     private int id;
 
     @Expose
+    @Column(name="title", unique = true, length = 30)
+    private String title;
+
+    @Expose
+    @Column(length = 150)
     private String body;
 
     @Expose
     @OneToMany(mappedBy = "poll", cascade = CascadeType.REMOVE)
     private List<PollTag> tags;
+
+    @OneToMany(mappedBy = "poll", cascade = CascadeType.REMOVE)
+    private List<PollItem> items;
 
     @JoinColumn(name = "contributor", referencedColumnName = "id")
     @ManyToOne
@@ -55,7 +68,7 @@ public class Poll {
     private PollStatus status;
 
     @Expose
-    private Date expiryDate;
+    private PollExpiry expiry;
 
     @Expose
     private Date setupTime;
@@ -69,6 +82,14 @@ public class Poll {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getBody() {
@@ -103,12 +124,12 @@ public class Poll {
         this.status = status;
     }
 
-    public Date getExpiryDate() {
-        return expiryDate;
+    public PollExpiry getExpiry() {
+        return expiry;
     }
 
-    public void setExpiry(Date expiryDate) {
-        this.expiryDate = expiryDate;
+    public void setExpiry(PollExpiry expiry) {
+        this.expiry = expiry;
     }
 
     public Date getSetupTime() {
@@ -117,6 +138,21 @@ public class Poll {
 
     public void setSetupTime(Date setupTime) {
         this.setupTime = setupTime;
+    }
+
+    public List<PollItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<PollItem> items) {
+        this.items = items;
+    }
+    
+    @Ignore
+    public int getTotalVotes(){
+        int total = 0;
+        total = items.stream().map((item) -> item.getVotes().size()).reduce(total, Integer::sum);
+        return total;
     }
 
     @Ignore

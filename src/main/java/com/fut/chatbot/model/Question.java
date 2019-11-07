@@ -6,11 +6,13 @@
 package com.fut.chatbot.model;
 
 import com.fut.chatbot.search.DummyStringBridge;
+import com.fut.chatbot.search.IndexingInterceptor;
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -46,7 +48,7 @@ import org.hibernate.search.annotations.TokenizerDef;
 @Entity
 @Table(name = "question")
 @XmlRootElement
-@Indexed
+@Indexed(interceptor = IndexingInterceptor.class)
 @AnalyzerDefs({
     @AnalyzerDef(
             name = "text_analyzer",
@@ -128,6 +130,7 @@ public class Question {
                 bridge = @FieldBridge(impl = DummyStringBridge.class)
         )
     })
+    @Column(length = 255)
     private String body;
 
     @Expose

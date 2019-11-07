@@ -1,22 +1,22 @@
 <div th:fragment="answerDetails(questionId, optionId, answer)">
-    <h5 th:utext='${answer == null ? "<b>[</b>Not Provided<b>]</b>": (answer.preference == null ? answer.body: answer.preference.name)}' class="col flow-text" th:classappend="${(isDone == false) ? 's9 m10':'s12'}"></h5>
+    <blockquote th:utext='${answer == null ? "<b>[</b>Not Provided<b>]</b>": (answer.preference == null ? answer.body: answer.preference.name)}' class="col flow-text" th:classappend="${(isDone == false) ? 's9 m10':'s12'}"></blockquote>
     <p class="col s3 m2 right-align" th:if="${isDone == false}">
-        <a th:if="${!(answer != null && answer.preference != null)}" href="#" th:onclick='updateAddDetails(false),showAddEditModal("Answer", JSON.parse(/*[[${answer == null ? null : answer.toJSON()}]]*/)
+        <a class="tooltipped" data-position="bottom" data-tooltip="Edit"  th:if="${!(answer != null && answer.preference != null)}" href="#" th:onclick='updateAddDetails(false),showAddEditModal("Answer", JSON.parse(/*[[${answer == null ? null : answer.toJSON()}]]*/)
            , "/images/avatar.png", false, JSON.parse("{\"question\": [[${questionId}]], \"option\": [[${optionId}]]}"))' >
             <i class="material-icons blue-text">edit</i>
         </a>
-        <a th:if="${answer == null}" href="#" th:onclick='updateAddDetails(true),showAddEditModal("Answer", JSON.parse(/*[[${answer == null ? null : answer.toJSON()}]]*/)
+        <a class="tooltipped" data-position="bottom" data-tooltip="Add from Preference" th:if="${answer == null}" href="#" th:onclick='updateAddDetails(true),showAddEditModal("Answer", JSON.parse(/*[[${answer == null ? null : answer.toJSON()}]]*/)
            , "/images/avatar.png", false, JSON.parse("{\"question\": [[${questionId}]], \"option\": [[${optionId}]]}"))'>
             <i class="material-icons orange-text">archive</i>
         </a>
-        <a th:if="${answer != null}" href="#" th:onclick="showConfirmModal('Answer', 'Delete', '/contributor/delete/answer/[[${answer.id}]]')">
+        <a class="tooltipped" data-position="bottom" data-tooltip="Delete"  th:if="${answer != null}" href="#" th:onclick="showConfirmModal('Answer', 'Delete', '/contributor/delete/answer/[[${answer.id}]]')">
             <i class="material-icons red-text">delete</i>
         </a>
     </p>
     <div class="col s12" th:if="${answer != null}">
         <div class="chip" th:each="extra : ${answer.extras}" th:switch="${extra.type.name()}">
             <img th:src="@{'/images/' + ${#strings.toLowerCase(extra.type.name())} + '.png'}"/>
-            <a th:if="${isDone == false}" href="#" th:onclick="showConfirmModal('Image Extra', 'Remove', '/contributor/delete/extra/[[${extra.id}]]')">
+            <a th:if="${isDone == false}" href="#" th:onclick="showConfirmModal('Extra', 'Remove', '/contributor/delete/extra/[[${extra.id}]]')">
                 <i class="material-icons red-text normal">close</i>
             </a>
             <a target="_blank" th:case="IMAGE" th:href="${extra.data}">

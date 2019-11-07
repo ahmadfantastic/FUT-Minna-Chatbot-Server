@@ -9,6 +9,7 @@ import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -40,6 +41,7 @@ public class Preference {
     private PreferenceType type;
 
     @Expose
+    @Column(length = 100)
     private String name;
 
     @OneToMany(mappedBy = "preference", cascade = CascadeType.REMOVE)

@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.fut</groupId>
-    <artifactId>chatbot-server</artifactId>
+    <artifactId>futm-chatbot-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>School Chatbot</name>
+    <name>FUTM Chatbot</name>
     <description>FUT Minna Student Information Chatbot Application Server</description>
 
     <properties>

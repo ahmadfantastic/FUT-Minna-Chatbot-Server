@@ -34,7 +34,6 @@ public class UserTag {
     
     @JoinColumn(name = "user", referencedColumnName = "id")
     @ManyToOne
-    @Expose
     private User user;
     
     @JoinColumn(name = "tag", referencedColumnName = "id")

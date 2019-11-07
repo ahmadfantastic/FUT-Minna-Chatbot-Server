@@ -1,20 +1,9 @@
 <div class="fixed-action-btn">
-    <a class="btn-floating btn-large blue">
+    <a href="#" onclick="showAddEditModal('Question', false, '/images/avatar.png', false, false)" class="btn-floating btn btn-large blue waves-effect">
         <i class="large material-icons">add</i>
     </a>
-    <ul>
-        <li th:if="${me.type.name() != 'REGULAR'}">
-            <a class="btn-floating green tooltipped" data-position="left" data-tooltip="Broadcast Message">
-                <i class="material-icons">rss_feed</i>
-            </a>
-        </li>
-        <li>
-            <a href="#" onclick="showAddEditModal('Question', false, '/images/avatar.png', false, false)" class="btn-floating red tooltipped" data-position="left" data-tooltip="Add New Question">
-                <i class="material-icons">live_help</i>
-            </a>
-        </li>
-    </ul>
 </div>
+
 
 <div class="row no-pd">
     <ul id="tabs-swipe-demo" class="tabs tabs-icon">
@@ -37,7 +26,7 @@
 <div id="answered_section" class="col s12">
     <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'APPROVED' && question.answer != null}">
         <div class="row">
-            <h5 th:text='${question.body}' class="col s10 m11 flow-text"></h5>
+            <blockquote th:text='${question.body}' class="col s10 m11 flow-text"></blockquote>
             <p class="col s2 m1" th:if="${me.type.name() == 'SUPER'}">
                 <a href="#" th:onclick="showAddEditModal('Question', JSON.parse(/*[[${question.toJSON()}]]*/), '/images/avatar.png', false, false)" >
                     <i class="material-icons blue-text">edit</i>
@@ -47,7 +36,7 @@
                 <div class="chip" th:each="tag : ${question.tags}">
                     <i class="material-icons amber-text normal">local_offer</i>
                     <span th:text="${tag.tag.name}" class="black-text"></span>
-                    <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Question Tag', 'Remove', '/contributor/delete/question_tag/[[${question.id}]]/[[${tag.id}]]')">
+                    <a th:if="${me.type.name() == 'SUPER'}" href="#" th:onclick="showConfirmModal('Question Tag', 'Remove', '/contributor/delete/question_tag/[[${tag.id}]]')">
                         <i class="material-icons red-text normal">close</i>
                     </a>
                 </div>
@@ -87,7 +76,7 @@
 <div id="approved_section" class="col s12">
     <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'APPROVED' && question.answer == null}">
         <div class="row">
-            <h5 th:text='${question.body}' class="col s10 m11 flow-text"></h5>
+            <blockquote th:text='${question.body}' class="col s10 m11 flow-text"></blockquote>
             <p class="col s2 m1" th:if="${me.type.name() == 'SUPER'}">
                 <a href="#" th:onclick="showAddEditModal('Question', JSON.parse(/*[[${question.toJSON()}]]*/), '/images/avatar.png', false, false)" >
                     <i class="material-icons blue-text">edit</i>
@@ -107,7 +96,6 @@
                         <i class="material-icons white-text normal">add</i>
                     </a>
                 </div>
-                <i class="material-icons purple-text left" th:if="${question.type.name() == 'BROADCAST'}">rss_feed</i>
                 <div class="chip green">
                     <a href='#' th:onclick='updateLink("answers_[[${question.id}]]"); load("_contributor_answers_[[${question.id}]]", {"embed": "yes"}, "content");'>
                         <span class="white-text">View Answers</span>
@@ -132,7 +120,7 @@
 <div id="requested_section" class="col s12" th:if="${me.type.name() != 'REGULAR'}">
     <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'REQUESTED'}">
         <div class="row">
-            <h5 th:text='${question.body}' class="col s12 flow-text"></h5>
+            <blockquote th:text='${question.body}' class="col s12 flow-text"></blockquote>
             <div class="col s12">
                 <div class="chip" th:each="tag : ${question.tags}">
                     <i class="material-icons amber-text normal">local_offer</i>
@@ -154,6 +142,12 @@
                     <span class="orange-text" th:text="${question.expiry.name()}"></span>
                     <i class="material-icons normal orange-text">timer</i>
                 </div>
+                <div class="chip" th:if="${!conflictStatus.get(question.id)}">
+                    <a href='#' th:onclick='updateLink("conflicts_[[${question.id}]]"); load("_contributor_conflicts_[[${question.id}]]", {"embed": "yes"}, "content");'>
+                        <span class="pink-text">Possible Conflicts</span>
+                        <i class="material-icons pink-text normal">error</i>
+                    </a>
+                </div>
                 <div class='chip right'>
                     <img th:src="${IMG_BASE + question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
                     <b class="right black-text" th:text="${'By: ' + question.contributor.firstName + ' ' + question.contributor.lastName}"></b>
@@ -168,7 +162,7 @@
 <div id="new_section" class="col s12">
     <div th:each="question : ${questions}" class='card col s12' th:if="${question.status.name() == 'CREATED' && question.contributor == me}">
         <div class="row">
-            <h5 th:text='${question.body}' class="col s8 m10 flow-text"></h5>
+            <blockquote th:text='${question.body}' class="col s8 m10 flow-text"></blockquote>
             <p class="col s2 m1">
                 <a href="#" th:onclick="showAddEditModal('Question', JSON.parse(/*[[${question.toJSON()}]]*/), '/images/avatar.png', false, false)" >
                     <i class="material-icons blue-text">edit</i>
@@ -203,6 +197,12 @@
                 <div class="chip orange-text">
                     <span class="orange-text" th:text="${question.expiry.name()}"></span>
                     <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class="chip" th:if="${!conflictStatus.get(question.id)}">
+                    <a href='#' th:onclick='updateLink("conflicts_[[${question.id}]]"); load("_contributor_conflicts_[[${question.id}]]", {"embed": "yes"}, "content");'>
+                        <span class="pink-text">Possible Conflicts</span>
+                        <i class="material-icons pink-text normal">error</i>
+                    </a>
                 </div>
                 <div class='chip right'>
                     <img th:src="${IMG_BASE + question.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
@@ -253,7 +253,7 @@
 <div id="sub_add_edit_modal" class="modal modal-fixed-footer">
     <form id="sub_add_edit_form" class="row" method="post" th:action="@{/contributor/save/question_tag}">
         <div class="modal-content container">
-            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Modal Header</h4>
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Add Question Tag</h4>
             <input id='question' name="question" type="hidden" value='-1' hidden='' required=""/>
             <div class='row'>
                 <div class='input-field col s12 purple-text'>
@@ -302,7 +302,7 @@
         tags[counter++] = /*[[${tag.name}]]*/'';
         /*[/]*/
         var data = {};
-        for(var i in tags){
+        for (var i in tags) {
             data[tags[i]] = "/images/tag.png";
         }
         $('input.autocomplete').autocomplete({

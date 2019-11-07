@@ -5,6 +5,7 @@
  */
 package com.fut.chatbot.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -23,19 +24,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class Feedback {
 
+    public enum FeedbackType {
+        GOOD, OUTDATED, INCORRECT, INCOMPLETE
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    
+
     @JoinColumn(name = "answer", referencedColumnName = "id")
     @ManyToOne
     private Answer answer;
-    
+
     @JoinColumn(name = "user", referencedColumnName = "id")
     @ManyToOne
     private User user;
-    
+
+    @Column(length = 255)
     private String message;
+
+    private FeedbackType type;
 
     public Feedback() {
     }
@@ -71,5 +79,13 @@ public class Feedback {
     public void setUser(User user) {
         this.user = user;
     }
-    
+
+    public FeedbackType getType() {
+        return type;
+    }
+
+    public void setType(FeedbackType type) {
+        this.type = type;
+    }
+
 }

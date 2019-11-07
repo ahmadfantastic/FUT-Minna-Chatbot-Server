@@ -12,10 +12,14 @@ import com.fut.chatbot.util.ImageSaver;
 import com.fut.chatbot.util.PatternChecker;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -59,12 +63,32 @@ public class SaveController {
     UserPreferenceRepo userPreferenceRepo;
     @Autowired
     UserRepo userRepo;
+    @Autowired
+    ContributorTagRepo contributorTagRepo;
+    @Autowired
+    BroadcastRepo broadcastRepo;
+    @Autowired
+    BroadcastTagRepo broadcastTagRepo;
+    @Autowired
+    PollTagRepo pollTagRepo;
+    @Autowired
+    PollRepo pollRepo;
+    @Autowired
+    PollItemRepo pollItemRepo;
+    @Autowired
+    MessageRepo messageRepo;
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     @PostMapping("contributor")
     public String saveContributor(HttpSession session, Model model, @ModelAttribute Contributor newContributor, @RequestParam(name = "image", required = false) MultipartFile image) throws IOException {
         int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
         if (id <= 0 && !contributorRepo.existsById(id)) {
             session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        if (contributorRepo.findById(id).get().getType() != Contributor.ContributorType.SUPER) {
+            session.setAttribute("error", "Access Denied");
             return "redirect:/login";
         }
 
@@ -74,10 +98,11 @@ public class SaveController {
         } else {
             if (PatternChecker.checkEmail(newContributor.getEmail())) {
                 newContributor.setStatus(Contributor.ContributorStatus.ACTIVE);
-                newContributor.setRegistrationDate(LocalDateTime.now());
+                newContributor.setRegistrationDate(new Date());
                 newContributor.setPassword(Constants.DEFAULT_PASSWORD);
-            }else{
+            } else {
                 session.setAttribute("error", "Invalid Email Address");
+                return "redirect:/contributor/contributors";
             }
         }
 
@@ -89,7 +114,6 @@ public class SaveController {
                 newContributor.setImageUrl(ImageSaver.getInstance().saveImage(imageFile));
             } else {
                 newContributor.setImageUrl(imageUrl);
-                return "redirect:/contributor/contributors";
             }
         }
 
@@ -234,6 +258,70 @@ public class SaveController {
         return "redirect:/contributor/questions";
     }
 
+    @PostMapping("broadcast")
+    public String saveBroadcast(HttpSession session, Model model, @ModelAttribute Broadcast newBroadcast) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (broadcastRepo.existsById(newBroadcast.getId())) {
+            Broadcast initBroadcast = broadcastRepo.findById(newBroadcast.getId()).get();
+            if (initBroadcast.getContributor() != contributor || initBroadcast.getStatus() != Broadcast.BroadcastStatus.CREATED) {
+                session.setAttribute("error", "Access Denied");
+                return "redirect:/contributor/broadcasts";
+            }
+            newBroadcast.setStatus(initBroadcast.getStatus());
+            newBroadcast.setContributor(initBroadcast.getContributor());
+        } else {
+            newBroadcast.setStatus(Broadcast.BroadcastStatus.CREATED);
+            newBroadcast.setContributor(contributor);
+        }
+        Broadcast savedBroadcast = broadcastRepo.save(newBroadcast);
+        if (savedBroadcast.getId() > 0) {
+            String message = savedBroadcast.getId() == newBroadcast.getId()
+                    ? "Broadcast Updated Successfully"
+                    : "Broadcast Created Successfully";
+            session.setAttribute("success", message);
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/broadcasts";
+    }
+
+    @PostMapping("poll")
+    public String savePoll(HttpSession session, Model model, @ModelAttribute Poll newPoll) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (pollRepo.existsById(newPoll.getId())) {
+            Poll initPoll = pollRepo.findById(newPoll.getId()).get();
+            if (initPoll.getContributor() != contributor || initPoll.getStatus() != Poll.PollStatus.CREATED) {
+                session.setAttribute("error", "Access Denied");
+                return "redirect:/contributor/polls";
+            }
+            newPoll.setStatus(initPoll.getStatus());
+            newPoll.setContributor(initPoll.getContributor());
+        } else {
+            newPoll.setStatus(Poll.PollStatus.CREATED);
+            newPoll.setContributor(contributor);
+        }
+        Poll savedPoll = pollRepo.save(newPoll);
+        if (savedPoll.getId() > 0) {
+            String message = savedPoll.getId() == newPoll.getId()
+                    ? "Poll Updated Successfully"
+                    : "Poll Created Successfully";
+            session.setAttribute("success", message);
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/polls";
+    }
+
     @PostMapping("answer/{id}")
     public String saveAnswer(HttpSession session, Model model, @ModelAttribute Answer newAnswer, @PathVariable("id") int initQuestionId) {
         int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
@@ -291,7 +379,11 @@ public class SaveController {
                 return "redirect:/contributor";
             }
 
-            return "redirect:/contributor/answers/" + initQuestion.getId();
+            if (savedAnswer.getQuestion().getStatus() == Question.QuestionStatus.APPROVED) {
+                return "redirect:/contributor/questions";
+            } else {
+                return "redirect:/contributor/answers/" + initQuestion.getId();
+            }
         } else {
             session.setAttribute("error", "Invalid Field(s)");
             return "redirect:/contributor/questions";
@@ -313,9 +405,8 @@ public class SaveController {
             }
             Tag tag = tagRepo.findByName(tagName);
             if (tag == null) {
-                tag = new Tag();
-                tag.setName(tagName);
-                tag = tagRepo.save(tag);
+                session.setAttribute("error", "Tag does not exist");
+                return "redirect:/contributor/questions";
             }
             if (newQuestionTag.getQuestion().getTags().contains(newQuestionTag)) {
                 session.setAttribute("error", "Tag Already in the question");
@@ -334,6 +425,117 @@ public class SaveController {
             return "redirect:/contributor/questions";
         }
         return "redirect:/contributor/questions";
+    }
+
+    @PostMapping("broadcast_tag")
+    public String saveBroadcastTag(HttpSession session, Model model, @ModelAttribute BroadcastTag newBroadcastTag, @RequestParam("tag_name") String tagName) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (newBroadcastTag.getBroadcast() != null && newBroadcastTag.getBroadcast().getContributor() != null) {
+            if (newBroadcastTag.getBroadcast().getContributor() != contributor) {
+                session.setAttribute("error", "Access Denied");
+                return "redirect:/contributor/broadcasts";
+            }
+            Tag tag = tagRepo.findByName(tagName);
+            if (tag == null) {
+                session.setAttribute("error", "Tag does not exist");
+                return "redirect:/contributor/broadcasts";
+            }
+            if (newBroadcastTag.getBroadcast().getTags().contains(newBroadcastTag)) {
+                session.setAttribute("error", "Tag Already in the broadcast");
+                return "redirect:/contributor/broadcasts";
+            }
+            newBroadcastTag.setTag(tag);
+            BroadcastTag savedBroadcastTag = broadcastTagRepo.save(newBroadcastTag);
+            if (savedBroadcastTag.getId() > 0) {
+                String message = "Tag Added to Broadcast Successfully";
+                session.setAttribute("success", message);
+            } else {
+                session.setAttribute("error", "Invalid Field(s)");
+            }
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+            return "redirect:/contributor/broadcasts";
+        }
+        return "redirect:/contributor/broadcasts";
+    }
+
+    @PostMapping("poll_tag")
+    public String savePollTag(HttpSession session, Model model, @ModelAttribute PollTag newPollTag, @RequestParam("tag_name") String tagName) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (newPollTag.getPoll() != null && newPollTag.getPoll().getContributor() != null) {
+            if (newPollTag.getPoll().getContributor() != contributor) {
+                session.setAttribute("error", "Access Denied");
+                return "redirect:/contributor/polls";
+            }
+            Tag tag = tagRepo.findByName(tagName);
+            if (tag == null) {
+                session.setAttribute("error", "Tag does not exist");
+                return "redirect:/contributor/polls";
+            }
+            if (newPollTag.getPoll().getTags().contains(newPollTag)) {
+                session.setAttribute("error", "Tag Already in the poll");
+                return "redirect:/contributor/polls";
+            }
+            newPollTag.setTag(tag);
+            PollTag savedPollTag = pollTagRepo.save(newPollTag);
+            if (savedPollTag.getId() > 0) {
+                String message = "Tag Added to Poll Successfully";
+                session.setAttribute("success", message);
+            } else {
+                session.setAttribute("error", "Invalid Field(s)");
+            }
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+            return "redirect:/contributor/polls";
+        }
+        return "redirect:/contributor/polls";
+    }
+
+    @PostMapping("contributor_tag")
+    public String saveContributorTag(HttpSession session, Model model, @ModelAttribute ContributorTag newContributorTag, @RequestParam("tag_name") String tagName) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (newContributorTag.getContributor() != null) {
+            if (contributor.getType() != Contributor.ContributorType.SUPER) {
+                session.setAttribute("error", "Access Denied");
+                return "redirect:/contributor/contributors";
+            }
+            Tag tag = tagRepo.findByName(tagName);
+            if (tag == null) {
+                session.setAttribute("error", "Tag does not exist");
+                return "redirect:/contributor/contributors";
+            }
+            if (newContributorTag.getContributor().getTags().contains(newContributorTag)) {
+                session.setAttribute("error", "Tag Already in the contributor");
+                return "redirect:/contributor/contributors";
+            }
+            newContributorTag.setTag(tag);
+            ContributorTag savedContributorTag = contributorTagRepo.save(newContributorTag);
+            if (savedContributorTag.getId() > 0) {
+                String message = "Tag Added to Contributor Successfully";
+                session.setAttribute("success", message);
+            } else {
+                session.setAttribute("error", "Invalid Field(s)");
+            }
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+            return "redirect:/contributor/contributors";
+        }
+        return "redirect:/contributor/contributors";
     }
 
     @RequestMapping("update_question_status/{id}/{status}")
@@ -360,6 +562,7 @@ public class SaveController {
                     if (question.getStatus().equals(Question.QuestionStatus.REQUESTED) && contributor.getType() != Contributor.ContributorType.REGULAR
                             && (!question.getContributor().equals(contributor) || contributor.getType() == Contributor.ContributorType.SUPER)) {
                         question.setStatus(Question.QuestionStatus.APPROVED);
+                        question.setSetupTime(new Date());
                         questionRepo.save(question);
                         session.setAttribute("success", "Question Approved !!!");
                     } else {
@@ -385,6 +588,140 @@ public class SaveController {
             session.setAttribute("error", "Invalid Field(s)");
         }
         return "redirect:/contributor/questions";
+    }
+
+    @RequestMapping("update_broadcast_status/{id}/{status}")
+    public String updateBroadcastStatus(HttpSession session, Model model, @PathVariable("id") int broadcastId, @PathVariable("status") int status) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (broadcastRepo.existsById(broadcastId)) {
+            Broadcast broadcast = broadcastRepo.findById(broadcastId).get();
+            switch (status) {
+                case 1:
+                    if (broadcast.getStatus().equals(Broadcast.BroadcastStatus.CREATED) && broadcast.getContributor().equals(contributor)) {
+                        boolean fullAccess = true;
+                        List<Tag> contributorsTags = contributor.getTags().stream().map(ContributorTag::getTag).collect(Collectors.toList());
+                        for (BroadcastTag broadcastTag : broadcast.getTags()) {
+                            if (!contributorsTags.contains(broadcastTag.getTag())) {
+                                fullAccess = false;
+                                break;
+                            }
+                        }
+                        if (fullAccess || contributor.getType() == Contributor.ContributorType.SUPER) {
+                            broadcast.setStatus(Broadcast.BroadcastStatus.SENT);
+                            broadcast.setSetupTime(new Date());
+                            broadcast = broadcastRepo.save(broadcast);
+                            session.setAttribute("success", "Broadcast Sent Successully!!!");
+                            sendBroadcastMessages(broadcast);
+                        } else {
+                            broadcast.setStatus(Broadcast.BroadcastStatus.REQUESTED);
+                            broadcastRepo.save(broadcast);
+                            session.setAttribute("success", "Broadcast Sent for Approval !!!");
+                        }
+                    } else {
+                        session.setAttribute("error", "Access Denied !!!");
+                    }
+                    break;
+                case 2:
+                    if (broadcast.getStatus().equals(Broadcast.BroadcastStatus.REQUESTED) && contributor.getType() == Contributor.ContributorType.SUPER) {
+                        broadcast.setStatus(Broadcast.BroadcastStatus.SENT);
+                        broadcast.setSetupTime(new Date());
+                        broadcast = broadcastRepo.save(broadcast);
+                        session.setAttribute("success", "Broadcast Approved !!!");
+                        sendBroadcastMessages(broadcast);
+                    } else {
+                        session.setAttribute("error", "Access Denied !!!");
+                    }
+                    break;
+                case 3:
+                    if (broadcast.getStatus().equals(Broadcast.BroadcastStatus.REQUESTED) && contributor.getType() == Contributor.ContributorType.SUPER) {
+                        broadcast.setStatus(Broadcast.BroadcastStatus.CREATED);
+                        broadcastRepo.save(broadcast);
+                        //TODO SEND MAIL
+                        session.setAttribute("success", "Broadcast Rejected !!!");
+                    } else {
+                        session.setAttribute("error", "Access Denied !!!");
+                    }
+                    break;
+                default:
+                    session.setAttribute("error", "Invalid Fields !!!");
+                    break;
+            }
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/broadcasts";
+    }
+
+    @RequestMapping("update_poll_status/{id}/{status}")
+    public String updatePollStatus(HttpSession session, Model model, @PathVariable("id") int pollId, @PathVariable("status") int status) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (pollRepo.existsById(pollId)) {
+            Poll poll = pollRepo.findById(pollId).get();
+            switch (status) {
+                case 1:
+                    if (poll.getStatus().equals(Poll.PollStatus.CREATED) && poll.getContributor().equals(contributor)) {
+                        boolean fullAccess = true;
+                        List<Tag> contributorsTags = contributor.getTags().stream().map(ContributorTag::getTag).collect(Collectors.toList());
+                        for (PollTag pollTag : poll.getTags()) {
+                            if (!contributorsTags.contains(pollTag.getTag())) {
+                                fullAccess = false;
+                                break;
+                            }
+                        }
+                        if (fullAccess || contributor.getType() == Contributor.ContributorType.SUPER) {
+                            poll.setStatus(Poll.PollStatus.PROGRESS);
+                            poll.setSetupTime(new Date());
+                            poll = pollRepo.save(poll);
+                            session.setAttribute("success", "Poll Started Successully!!!");
+                            sendPollMessages(poll);
+                        } else {
+                            poll.setStatus(Poll.PollStatus.REQUESTED);
+                            pollRepo.save(poll);
+                            session.setAttribute("success", "Poll Sent for Approval !!!");
+                        }
+                    } else {
+                        session.setAttribute("error", "Access Denied !!!");
+                    }
+                    break;
+                case 2:
+                    if (poll.getStatus().equals(Poll.PollStatus.REQUESTED) && contributor.getType() == Contributor.ContributorType.SUPER) {
+                        poll.setStatus(Poll.PollStatus.PROGRESS);
+                        poll.setSetupTime(new Date());
+                        poll = pollRepo.save(poll);
+                        session.setAttribute("success", "Poll Approved !!!");
+                        sendPollMessages(poll);
+                    } else {
+                        session.setAttribute("error", "Access Denied !!!");
+                    }
+                    break;
+                case 3:
+                    if (poll.getStatus().equals(Poll.PollStatus.REQUESTED) && contributor.getType() == Contributor.ContributorType.SUPER) {
+                        poll.setStatus(Poll.PollStatus.CREATED);
+                        pollRepo.save(poll);
+                        //TODO SEND MAIL
+                        session.setAttribute("success", "Poll Rejected !!!");
+                    } else {
+                        session.setAttribute("error", "Access Denied !!!");
+                    }
+                    break;
+                default:
+                    session.setAttribute("error", "Invalid Fields !!!");
+                    break;
+            }
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+        }
+        return "redirect:/contributor/polls";
     }
 
     @RequestMapping("update_answer_status/{id}/{status}")
@@ -482,7 +819,9 @@ public class SaveController {
                 } else {
                     session.setAttribute("error", "Invalid Field(s)");
                 }
-
+                if (initQuestion.getStatus() == Question.QuestionStatus.APPROVED) {
+                    return "redirect:/contributor/questions";
+                }
             } else {
                 session.setAttribute("error", "Invalid Field(s)");
             }
@@ -520,6 +859,9 @@ public class SaveController {
                 } else {
                     session.setAttribute("error", "Invalid Field(s)");
                 }
+                if (initQuestion.getStatus() == Question.QuestionStatus.APPROVED) {
+                    return "redirect:/contributor/questions";
+                }
 
             } else {
                 session.setAttribute("error", "Invalid Field(s)");
@@ -531,4 +873,86 @@ public class SaveController {
         }
     }
 
+    @PostMapping("poll_item")
+    public String savePollItem(HttpSession session, Model model, @ModelAttribute PollItem newPollItem) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (contributor.getType() == Contributor.ContributorType.REGULAR) {
+            session.setAttribute("error", "Access Denied");
+            return "redirect:/contributor/dashboard";
+        }
+        if (newPollItem.getPoll() == null) {
+            session.setAttribute("error", "Invalid Poll");
+        } else if (newPollItem.getPoll().getStatus() != Poll.PollStatus.CREATED) {
+            session.setAttribute("error", "Cannot add poll item to submitted poll");
+        } else if (pollItemRepo.findAllByPoll(newPollItem.getPoll()).size() >= 5) {
+            session.setAttribute("error", "Maximum Poll Item reached for this poll");
+        } else if (pollItemRepo.findByPollAndName(newPollItem.getPoll(), newPollItem.getName()) != null) {
+            session.setAttribute("error", "Poll Item with this name already exist in this poll");
+        } else {
+            PollItem savedPollItem = pollItemRepo.save(newPollItem);
+            if (savedPollItem.getId() > 0) {
+                String message = savedPollItem.getId() == savedPollItem.getId()
+                        ? "Poll Item Updated Successfully"
+                        : "Poll Item Added Successfully";
+                session.setAttribute("success", message);
+            } else {
+                session.setAttribute("error", "Invalid Field(s)");
+            }
+        }
+        return "redirect:/contributor/polls";
+    }
+
+    @Async
+    private void sendBroadcastMessages(Broadcast broadcast) {
+        List<Tag> tags = broadcast.getTags().stream().map(BroadcastTag::getTag).collect(Collectors.toList());
+        List<User> users = findEligibleUsers(tags);
+
+        for (User user : users) {
+            Message message = new Message();
+            message.setType(Message.MessageType.BROADCAST);
+            message.setTime(new Date());
+            message.setUser(user);
+            message.setBroadcast(broadcast);
+            message = messageRepo.save(message);
+            message.getUser().setFeedbacks(new ArrayList<>());
+
+            String jsonMessage = Constants.GSON_EXPOSE.toJson(message);
+            simpMessagingTemplate.convertAndSendToUser(user.getPhone(), "/reply", jsonMessage);
+        }
+    }
+
+    @Async
+    private void sendPollMessages(Poll poll) {
+        List<Tag> tags = poll.getTags().stream().map(PollTag::getTag).collect(Collectors.toList());
+        List<User> users = findEligibleUsers(tags);
+
+        for (User user : users) {
+            Message message = new Message();
+            message.setType(Message.MessageType.POLL);
+            message.setTime(new Date());
+            message.setUser(user);
+            message.setPoll(poll);
+            message = messageRepo.save(message);
+            message.getUser().setFeedbacks(new ArrayList<>());
+
+            String jsonMessage = Constants.GSON_EXPOSE.toJson(message);
+            simpMessagingTemplate.convertAndSendToUser(user.getPhone(), "/reply", jsonMessage);
+        }
+    }
+
+    private List<User> findEligibleUsers(List<Tag> tags) {
+        List<User> eligibleUsers = new ArrayList<>();
+        for (User user : userRepo.findAll()) {
+            List<Tag> userTags = user.getTags().stream().map(UserTag::getTag).collect(Collectors.toList());
+            if (tags.stream().filter(userTags::contains).count() > 0) {
+                eligibleUsers.add(user);
+            }
+        }
+        return eligibleUsers;
+    }
 }

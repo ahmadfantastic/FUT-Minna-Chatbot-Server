@@ -7,12 +7,16 @@ package com.fut.chatbot.model;
 
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
+import java.util.List;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import jdk.nashorn.internal.ir.annotations.Ignore;
@@ -30,14 +34,19 @@ public class PollItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Expose
     private int id;
-    
+
     @JoinColumn(name = "poll", referencedColumnName = "id")
     @ManyToOne
     @Expose
     private Poll poll;
-    
+
     @Expose
-    private String value;
+    @OneToMany(mappedBy = "pollItem", cascade = CascadeType.REMOVE)
+    private List<Vote> votes;
+
+    @Expose
+    @Column(length = 15)
+    private String name;
 
     public PollItem() {
     }
@@ -58,16 +67,24 @@ public class PollItem {
         this.poll = poll;
     }
 
-    public String getValue() {
-        return value;
+    public String getName() {
+        return name;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(List<Vote> votes) {
+        this.votes = votes;
     }
 
     @Ignore
-    public String toJSON(){
+    public String toJSON() {
         return Constants.GSON_EXPOSE.toJson(this);
     }
 }

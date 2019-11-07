@@ -5,7 +5,9 @@
  */
 package com.fut.chatbot.repo;
 
+import com.fut.chatbot.model.Poll;
 import com.fut.chatbot.model.PollItem;
+import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 
 /**
@@ -14,4 +16,7 @@ import org.springframework.data.repository.CrudRepository;
  */
 public interface PollItemRepo extends CrudRepository<PollItem, Integer>{
     
+    List<PollItem> findAllByPoll(Poll poll);
+    
+    PollItem findByPollAndName(Poll poll, String name);
 }

@@ -7,6 +7,7 @@ package com.fut.chatbot.model;
 
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -38,6 +39,7 @@ public class Extra {
     private int id;
 
     @Expose
+    @Column(length = 255)
     private String data;
 
     @Expose

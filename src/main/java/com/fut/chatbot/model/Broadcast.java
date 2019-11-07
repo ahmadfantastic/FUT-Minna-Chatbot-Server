@@ -10,6 +10,7 @@ import com.google.gson.annotations.Expose;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,7 +32,7 @@ import jdk.nashorn.internal.ir.annotations.Ignore;
 public class Broadcast {
 
     public enum BroadcastStatus {
-        CREATED, REQUESTED, APPROVED
+        CREATED, REQUESTED, SENT
     };
 
     public enum BroadcastExpiry {
@@ -44,6 +45,7 @@ public class Broadcast {
     private int id;
 
     @Expose
+    @Column(length = 255)
     private String body;
 
     @Expose

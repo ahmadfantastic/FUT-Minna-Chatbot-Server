@@ -5,6 +5,8 @@
  */
 package com.fut.chatbot.model;
 
+import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,6 +33,7 @@ public class Ask {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(length = 255)
     private String text;
 
     @JoinColumn(name = "question", referencedColumnName = "id")
@@ -42,6 +45,8 @@ public class Ask {
     private User user;
 
     private AskAccuracy accuracy;
+
+    private Date askTime;
 
     public Ask() {
     }
@@ -84,6 +89,14 @@ public class Ask {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Date getAskTime() {
+        return askTime;
+    }
+
+    public void setAskTime(Date askTime) {
+        this.askTime = askTime;
     }
 
 }

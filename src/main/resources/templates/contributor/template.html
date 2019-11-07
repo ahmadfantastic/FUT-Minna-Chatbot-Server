@@ -54,14 +54,27 @@
                         <i class="purple-text material-icons">question_answer</i>Questions
                     </a>
                 </li>
-                <li id="_contributor_users" th:if="${contributor.type.name() == 'SUPER'}">
-                    <a id="_contributor_users_link"  class="purple-text">
-                        <i class="purple-text material-icons">people</i>Users
-                    </a> 
+                <li id="_contributor_broadcasts" th:if="${contributor.type.name() != 'REGULAR'}">
+                    <a id="_contributor_broadcasts_link" class="purple-text">
+                        <i class="purple-text material-icons">rss_feed</i>Broadcasts
+                    </a>
+                </li>
+                <li id="_contributor_polls" th:if="${contributor.type.name() != 'REGULAR'}">
+                    <a id="_contributor_polls_link" class="purple-text">
+                        <i class="purple-text material-icons">poll</i>Polls
+                    </a>
+                </li>
+                <li>
+                    <div class="divider"></div>
                 </li>
                 <li id="_contributor_contributors" th:if="${contributor.type.name() == 'SUPER'}">
                     <a id="_contributor_contributors_link" class="purple-text">
                         <i class="purple-text material-icons">people_outline</i>Contributors
+                    </a> 
+                </li>
+                <li id="_contributor_users" th:if="${contributor.type.name() == 'SUPER'}">
+                    <a id="_contributor_users_link"  class="purple-text">
+                        <i class="purple-text material-icons">people</i>Users
                     </a> 
                 </li>
                 <li id="_contributor_feedbacks" th:if="${contributor.type.name() == 'SUPER'}">
@@ -112,6 +125,7 @@
         <!--  Scripts-->
         <script th:src="@{/js/jquery-3.3.1.js}"></script>
         <script th:src="@{/js/materialize.js}"></script>
+        <script th:src="@{/js/Chart.min.js}"></script>
         <script th:src="@{/js/app.js}"></script>
         <script class="init" type="text/javascript">
             var current = "_contributor_[[${page}]]";
@@ -125,6 +139,8 @@
                 load(current, {'embed': 'yes'}, "content");
                 initNavLink('_contributor_dashboard');
                 initNavLink('_contributor_questions');
+                initNavLink('_contributor_broadcasts');
+                initNavLink('_contributor_polls');
                 initNavLink('_contributor_users');
                 initNavLink('_contributor_contributors');
                 initNavLink('_contributor_feedbacks');

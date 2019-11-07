@@ -28,6 +28,7 @@ public class Message {
     public enum MessageType{ANSWER, POLL, BROADCAST}
 
     @Id
+    @Expose
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 

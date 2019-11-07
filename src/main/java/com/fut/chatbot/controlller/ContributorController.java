@@ -7,7 +7,13 @@ package com.fut.chatbot.controlller;
 
 import com.fut.chatbot.model.*;
 import com.fut.chatbot.repo.*;
+import com.fut.chatbot.search.HibernateSearchService;
+import com.fut.chatbot.search.SearchItem;
 import com.fut.chatbot.util.Constants;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -51,6 +57,12 @@ public class ContributorController {
     UserPreferenceRepo userPreferenceRepo;
     @Autowired
     UserRepo userRepo;
+    @Autowired
+    BroadcastRepo broadcastRepo;
+    @Autowired
+    PollRepo pollRepo;
+    @Autowired
+    private HibernateSearchService searchService;
 
     @GetMapping("")
     public String template(HttpSession session, Model model) {
@@ -112,11 +124,89 @@ public class ContributorController {
             return "redirect:/contributor";
         }
         Contributor contributor = contributorRepo.findById(id).get();
+        List<Question> questions = (List<Question>) questionRepo.findAll();
+        HashMap<Integer, Boolean> possibleConflicts = new HashMap<>();
+        for (Question question : questions) {
+            List<SearchItem> searchItems = searchService.search(question.getBody());
+            boolean noConflicts = searchItems == null || searchItems.isEmpty() || searchItems.get(0).getScore() < 0.5;
+            possibleConflicts.put(question.getId(), noConflicts);
+        }
         model.addAttribute("me", contributor);
         model.addAttribute("IMG_BASE", Constants.IMAGE_LOCAL_BASE);
-        model.addAttribute("questions", questionRepo.findAll());
+        model.addAttribute("questions", questions);
+        model.addAttribute("conflictStatus", possibleConflicts);
         model.addAttribute("tags", tagRepo.findAll());
         return "contributor/questions";
+    }
+
+    @RequestMapping("broadcasts")
+    public String broadcasts(HttpSession session, Model model, @RequestParam(defaultValue = "no") String embed) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (contributor.getType() == Contributor.ContributorType.REGULAR) {
+            session.setAttribute("error", "Access Denied");
+            return "redirect:/login";
+        }
+        session.setAttribute("page", "broadcasts");
+        if (!embed.equals("yes")) {
+            return "redirect:/contributor";
+        }
+        List<Broadcast> broadcasts = (List<Broadcast>) broadcastRepo.findAll();
+        model.addAttribute("me", contributor);
+        model.addAttribute("IMG_BASE", Constants.IMAGE_LOCAL_BASE);
+        model.addAttribute("broadcasts", broadcasts);
+        model.addAttribute("tags", tagRepo.findAll());
+        return "contributor/broadcasts";
+    }
+
+    @RequestMapping("polls")
+    public String polls(HttpSession session, Model model, @RequestParam(defaultValue = "no") String embed) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (contributor.getType() == Contributor.ContributorType.REGULAR) {
+            session.setAttribute("error", "Access Denied");
+            return "redirect:/login";
+        }
+        session.setAttribute("page", "polls");
+        if (!embed.equals("yes")) {
+            return "redirect:/contributor";
+        }
+        List<Poll> polls = (List<Poll>) pollRepo.findAll();
+        List<String[]> voteData = new ArrayList<>();
+        for (Poll poll : polls) {
+            if (poll.getStatus() == Poll.PollStatus.PROGRESS || poll.getStatus() == Poll.PollStatus.FINISHED) {
+                int count = poll.getItems().size();
+                String[] labels = new String[count];
+                int[] data = new int[count];
+                for (int i = 0; i < count; i++) {
+                    PollItem item = poll.getItems().get(i);
+                    labels[i] = "\"" + item.getName() + "\"";
+                    data[i] = item.getVotes().size();
+                }
+                voteData.add(new String[]{
+                    String.valueOf(poll.getId()),
+                    Arrays.toString(labels),
+                    Arrays.toString(data),
+                    String.valueOf(count)
+                });
+            }
+        }
+
+        model.addAttribute("me", contributor);
+        model.addAttribute("IMG_BASE", Constants.IMAGE_LOCAL_BASE);
+        model.addAttribute("polls", polls);
+        model.addAttribute("voteData", voteData);
+        model.addAttribute("tags", tagRepo.findAll());
+        return "contributor/polls";
     }
 
     @RequestMapping("users")
@@ -155,6 +245,7 @@ public class ContributorController {
         model.addAttribute("me", contributor);
         model.addAttribute("IMG_BASE", Constants.IMAGE_LOCAL_BASE);
         model.addAttribute("contributors", contributorRepo.findAll());
+        model.addAttribute("tags", tagRepo.findAll());
         return "contributor/contributors";
     }
 
@@ -293,7 +384,7 @@ public class ContributorController {
         if (contributor.getType() != Contributor.ContributorType.SUPER) {
             session.setAttribute("error", "Access Denied");
             return "redirect:/contributor/questions";
-        }else if (questionRepo.existsById(questionId)) {
+        } else if (questionRepo.existsById(questionId)) {
             Question question = questionRepo.findById(questionId).get();
             if (question.getStatus() == Question.QuestionStatus.APPROVED && question.getAnswer() != null) {
                 model.addAttribute("me", contributor);
@@ -304,6 +395,31 @@ public class ContributorController {
                 session.setAttribute("error", "Not Applicable");
                 return "redirect:/contributor/questions";
             }
+        } else {
+            session.setAttribute("error", "Invalid Field(s)");
+            return "redirect:/contributor";
+        }
+    }
+
+    @RequestMapping("conflicts/{id}")
+    public String conflicts(HttpSession session, Model model, @RequestParam(defaultValue = "no") String embed, @PathVariable("id") int questionId) {
+        int id = (Integer) (session.getAttribute("contributor") != null ? session.getAttribute("contributor") : -1);
+        if (id <= 0 && !contributorRepo.existsById(id)) {
+            session.setAttribute("error", "Login Required");
+            return "redirect:/login";
+        }
+        session.setAttribute("page", "conflicts_" + questionId);
+        if (!embed.equals("yes")) {
+            return "redirect:/contributor";
+        }
+        Contributor contributor = contributorRepo.findById(id).get();
+        if (questionRepo.existsById(questionId)) {
+            Question question = questionRepo.findById(questionId).get();
+            model.addAttribute("me", contributor);
+            model.addAttribute("question", question);
+            model.addAttribute("searchItems", searchService.search(question.getBody()));
+            model.addAttribute("IMG_BASE", Constants.IMAGE_LOCAL_BASE);
+            return "contributor/conflicts";
         } else {
             session.setAttribute("error", "Invalid Field(s)");
             return "redirect:/contributor";

@@ -1,5 +1,4 @@
 /* global google, M */
-
 function showAddEditModal(entityName, entityObject = false, imageUrl = false, subModal = false, extraObject = false) {
     if (!entityObject) {
         if ($("#id").length) {

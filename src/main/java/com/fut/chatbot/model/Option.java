@@ -8,6 +8,7 @@ package com.fut.chatbot.model;
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,6 +35,7 @@ public class Option {
     private int id;
 
     @Expose
+    @Column(length = 50)
     private String text;
 
     @JoinColumn(name = "parentAnswer", referencedColumnName = "id")

@@ -1,0 +1,224 @@
+<div class="fixed-action-btn">
+    <a href="#" onclick="showAddEditModal('Broadcast', false, '/images/avatar.png', false, false)" class="btn-floating btn btn-large blue waves-effect">
+        <i class="large material-icons">add</i>
+    </a>
+</div>
+
+
+<div class="row no-pd">
+    <ul id="tabs-swipe-demo" class="tabs tabs-icon">
+        <li class="tab col s4">
+            <a href="#sent_section" class="green-text"><i class="material-icons">done_all</i>Sent</a>
+        </li>
+        <li class="tab col s4" th:if="${me.type.name() == 'SUPER'}">
+            <a class="orange-text" href="#requested_section"><i class=" material-icons">new_releases</i>Requested</a>
+        </li>
+        <li class="tab col s4">
+            <a class="red-text active" href="#new_section"><i class=" material-icons">fiber_new</i>New</a>
+        </li>
+    </ul>
+</div>
+
+<!--SENT SECTION -->
+<div id="sent_section" class="col s12">
+    <div th:each="broadcast : ${broadcasts}" class='card col s12' th:if="${broadcast.status.name() == 'SENT' && me.type.name() != 'REGULAR'}">
+        <div class="row">
+            <blockquote th:text='${broadcast.body}' class="col s12 flow-text"></blockquote>
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${broadcast.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${broadcast.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + broadcast.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + broadcast.contributor.firstName + ' ' + broadcast.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF SENT SECTION -->
+
+<!-- REQUESTED SECTION -->
+<div id="requested_section" class="col s12">
+    <div th:each="broadcast : ${broadcasts}" class='card col s12' th:if="${broadcast.status.name() == 'REQUESTED' && me.type.name() == 'SUPER'}">
+        <div class="row">
+            <blockquote th:text='${broadcast.body}' class="col s12 flow-text"></blockquote>
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${broadcast.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div class="chip green">
+                    <a href='#' th:onclick="showConfirmModal('Broadcast', 'Approve', '/contributor/save/update_broadcast_status/[[${broadcast.id}]]/2')">
+                        <span class="white-text">Send</span>
+                        <i class="material-icons white-text normal">Approve</i>
+                    </a>
+                </div>
+                <div class="chip red">
+                    <a href='#' th:onclick="showConfirmModal('Broadcast', 'Reject', '/contributor/save/update_broadcast_status/[[${broadcast.id}]]/3')">
+                        <span class="white-text">Reject</span>
+                        <i class="material-icons white-text normal">cancel</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${broadcast.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + broadcast.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + broadcast.contributor.firstName + ' ' + broadcast.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF REQUESTED SECTION -->
+
+<!-- NEW SECTION -->
+<div id="new_section" class="col s12">
+    <div th:each="broadcast : ${broadcasts}" class='card col s12' th:if="${broadcast.status.name() == 'CREATED' && broadcast.contributor == me}">
+        <div class="row">
+            <blockquote th:text='${broadcast.body}' class="col s8 m10 flow-text"></blockquote>
+            <p class="col s2 m1">
+                <a href="#" th:onclick="showAddEditModal('Broadcast', JSON.parse(/*[[${broadcast.toJSON()}]]*/), '/images/avatar.png', false, false)" >
+                    <i class="material-icons blue-text">edit</i>
+                </a>
+            </p>
+            <p class="col s2 m1">
+                <a href="#" th:onclick="showConfirmModal('Broadcast', 'Delete', '/contributor/delete/broadcast/[[${broadcast.id}]]')">
+                    <i class="material-icons red-text">delete</i>
+                </a>
+            </p>
+
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${broadcast.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                    <a href="#" th:onclick="showConfirmModal('Broadcast Tag', 'Remove', '/contributor/delete/broadcast_tag/[[${tag.id}]]')">
+                        <i class="material-icons red-text normal">close</i>
+                    </a>
+                </div>
+                <div class="chip blue">
+                    <a href='#' th:onclick='showAddEditModal("Broadcasts Tag", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"broadcast\": [[${broadcast.id}]]}"))'>
+                        <span class="white-text">Add Tag</span>
+                        <i class="material-icons white-text normal">add</i>
+                    </a>
+                </div>
+                <div class="chip green">
+                    <a href='#' th:onclick="showConfirmModal('Broadcast', 'Send Approval Request', '/contributor/save/update_broadcast_status/[[${broadcast.id}]]/1')">
+                        <span class="white-text">Send</span>
+                        <i class="material-icons white-text normal">send</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${broadcast.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + broadcast.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + broadcast.contributor.firstName + ' ' + broadcast.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF NEW SECTION -->
+
+<div id="add_edit_modal" class="modal modal-fixed-footer">
+    <form id="add_edit_form" class="row" method="post" th:action="@{/contributor/save/broadcast}">
+        <div class="modal-content container">
+            <h4 id='add_edit_label' class="col s12 purple-text center-align"></h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <textarea placeholder="Broadcast Message" class='materialize-textarea' data-length="255" name='body' id='body' required=""></textarea>
+                </div>
+            </div>
+
+            <div class='row'>
+                <div class="input-field col s12 purple-text">
+                    <i class="material-icons prefix">arrow_drop_down_circle</i>
+                    <select id='expiry' name="expiry" required="">
+                        <option value="" disabled selected="">Choose your option</option>
+                        <option value="HOUR">Expires 1 hour after being sent</option>
+                        <option value="HOUR_2">Expires 2 hour after being sent</option>
+                        <option value="DAY">Expires at the end of day being sent</option>
+                        <option value="WEEK">Expires week after being sent</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub_add_edit_form" class="row" method="post" th:action="@{/contributor/save/broadcast_tag}">
+        <div class="modal-content container">
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Add Broadcast Tag</h4>
+            <input id='broadcast' name="broadcast" type="hidden" value='-1' hidden='' required=""/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Tag" class='autocomplete' name='tag_name' id='tag_name' required="" autocomplete="off"/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm_modal" class="modal">
+    <div class="modal-content">
+        <h4 class="blue-text">Confirmation !!!</h4>
+        <h6 id="confirm_modal_message">This action is cannot be undone</h6>
+        <h6 class="red-text">This action is cannot be undone</h6>
+    </div>
+    <div class="modal-footer">
+        <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i>No</a>
+        <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
+    </div>
+</div>
+
+<div id="page_modal" class="modal bottom-sheet">
+    <div class="modal-content">
+        <div id='page' class="row"></div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+        $('select').formSelect();
+        $('.tabs').tabs();
+        $('textarea').characterCounter();
+        $('.tooltipped').tooltip();
+        var tags = [];
+        var counter = 0;
+        /*[# th:each="tag : ${tags}"]*/
+        tags[counter++] = /*[[${tag.name}]]*/'';
+        /*[/]*/
+        var data = {};
+        for (var i in tags) {
+            data[tags[i]] = "/images/tag.png";
+        }
+        $('input.autocomplete').autocomplete({
+            data: data
+        });
+    });
+</script>

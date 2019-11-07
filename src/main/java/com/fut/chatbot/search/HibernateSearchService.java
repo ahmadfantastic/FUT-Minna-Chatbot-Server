@@ -58,7 +58,7 @@ public class HibernateSearchService {
                 System.out.println(Constants.GSON_EXPOSE.toJson(searchItem));
                 resultList.add(searchItem);
             });
-            System.out.println("");
+            //System.out.println("");
         } catch (NoResultException ignore) {}
 
         return resultList;

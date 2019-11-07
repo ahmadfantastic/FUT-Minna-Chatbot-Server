@@ -1,0 +1,424 @@
+<div class="fixed-action-btn">
+    <a href="#" onclick="showAddEditModal('Poll', false, '/images/avatar.png', false, false)" class="btn-floating btn btn-large blue waves-effect">
+        <i class="large material-icons">add</i>
+    </a>
+</div>
+
+<div class="row no-pd">
+    <ul id="tabs-swipe-demo" class="tabs tabs-icon">
+        <li class="tab col s3">
+            <a href="#finished_section" class="green-text"><i class="material-icons">done_all</i>Finished</a>
+        </li>
+        <li class="tab col s3">
+            <a href="#progress_section" class="green-text "><i class="material-icons">hourglass_empty</i>Progress</a>
+        </li>
+        <li class="tab col s3" th:if="${me.type.name() == 'SUPER'}">
+            <a class="orange-text" href="#requested_section"><i class=" material-icons">new_releases</i>Requested</a>
+        </li>
+        <li class="tab col s3" th:if="${me.type.name() != 'REGULAR'}">
+            <a class="red-text" href="#new_section"><i class=" material-icons">fiber_new</i>New</a>
+        </li>
+    </ul>
+</div>
+
+<!--FINISHED SECTION -->
+<div id="finished_section" class="col s12">
+    <div th:each="poll : ${polls}" class='col s12 m6' th:if="${poll.status.name() == 'FINISHED'}">
+        <div class='card'>
+            <div class="card-image">
+                <h5 th:text="${poll.title}" class="col s12"></h5>
+                <div class="carousel carousel-slider center" style="height: 220px; max-height: 220px; min-height: 220px">
+                    <div class="carousel-item" href="#one!">
+                        <canvas th:id="${'voteChartBar' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px" ></canvas>
+                    </div>
+                    <div class="carousel-item" href="#two!">
+                        <canvas th:id="${'voteChartLine' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                    <div class="carousel-item" href="#three!">
+                        <canvas th:id="${'voteChartPie' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                    <div class="carousel-item" href="#four!">
+                        <canvas th:id="${'voteChartDoughnut' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                    <div class="carousel-item" href="#five!">
+                        <canvas th:id="${'voteChartPolarArea' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="card-content">
+                <span class="card-title activator grey-text text-darken-4">
+                    Total Votes so far: 
+                    <span style="font-size: 20px" class="blue-text darken-3" th:text="${ poll.getTotalVotes()}"></span>
+                    <i class="material-icons right">more_vert</i>
+                </span>
+            </div>
+            <div class="card-reveal">
+                <span class="card-title grey-text text-darken-4">Poll Details<i class="material-icons right">close</i></span>
+
+                <blockquote th:text="${poll.body}"></blockquote>
+                <div class="chip" th:each="tag : ${poll.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + poll.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + poll.contributor.firstName + ' ' + poll.contributor.lastName}"></b>
+                </div>
+            </div>
+            <div class="card-action">
+                <div>Started At: 
+                    <span class="pink-text" th:text="${#dates.format(poll.setupTime, 'hh:mm dd-MMM-yyyy')}"></span>
+                    . Expiry Type: 
+                    <span class="green-text" th:text="${poll.expiry.name()}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF FINISHED SECTION -->
+
+<!--PROGRESS SECTION -->
+<div id="progress_section">
+    <div th:each="poll : ${polls}" class='col s12 m6' th:if="${poll.status.name() == 'PROGRESS'}">
+        <div class='card'>
+            <div class="card-image">
+                <h5 th:text="${poll.title}" class="col s12"></h5>
+                <div class="carousel carousel-slider center" style="height: 220px; max-height: 220px; min-height: 220px">
+                    <div class="carousel-item" href="#one!">
+                        <canvas th:id="${'voteChartBar' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px" ></canvas>
+                    </div>
+                    <div class="carousel-item" href="#two!">
+                        <canvas th:id="${'voteChartLine' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                    <div class="carousel-item" href="#three!">
+                        <canvas th:id="${'voteChartPie' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                    <div class="carousel-item" href="#four!">
+                        <canvas th:id="${'voteChartDoughnut' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                    <div class="carousel-item" href="#five!">
+                        <canvas th:id="${'voteChartPolarArea' + poll.id}" style="height: 220px; max-height: 220px; min-height: 220px"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="card-content">
+                <span class="card-title activator grey-text text-darken-4">
+                    Total Votes so far: 
+                    <span style="font-size: 20px" class="blue-text darken-3" th:text="${ poll.getTotalVotes()}"></span>
+                    <i class="material-icons right">more_vert</i>
+                </span>
+            </div>
+            <div class="card-reveal">
+                <span class="card-title grey-text text-darken-4">Poll Details<i class="material-icons right">close</i></span>
+
+                <blockquote th:text="${poll.body}"></blockquote>
+                <div class="chip" th:each="tag : ${poll.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + poll.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + poll.contributor.firstName + ' ' + poll.contributor.lastName}"></b>
+                </div>
+            </div>
+            <div class="card-action">
+                <div>Started At: 
+                    <span class="pink-text" th:text="${#dates.format(poll.setupTime, 'hh:mm dd-MMM-yyyy')}"></span>
+                    . Expiry Type: 
+                    <span class="green-text" th:text="${poll.expiry.name()}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF PROGRESS SECTION -->
+
+<!-- REQUESTED SECTION -->
+<div id="requested_section" class="col s12" th:if="${me.type.name() == 'SUPER'}">
+    <div th:each="poll : ${polls}" class='card col s12' th:if="${poll.status.name() == 'REQUESTED' && me.type.name() == 'SUPER'}">
+        <div class="row">
+            <h4 th:text='${poll.title}' class="col s12 underline" style="font-family: monospace"></h4>
+            <blockquote th:text='${poll.body}' class="col s12 flow-text"></blockquote>
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${poll.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                </div>
+                <div class="chip pink" th:each="item : ${poll.items}">
+                    <i class="material-icons amber-text normal">grade</i>
+                    <span th:text="${item.name}" class="white-text"></span>
+                </div>
+                <div class="chip green">
+                    <a href='#' th:onclick="showConfirmModal('Poll', 'Approve', '/contributor/save/update_poll_status/[[${poll.id}]]/2')">
+                        <span class="white-text">Approve</span>
+                        <i class="material-icons white-text normal">check</i>
+                    </a>
+                </div>
+                <div class="chip red">
+                    <a href='#' th:onclick="showConfirmModal('Poll', 'Reject', '/contributor/save/update_poll_status/[[${poll.id}]]/3')">
+                        <span class="white-text">Reject</span>
+                        <i class="material-icons white-text normal">cancel</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${poll.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + poll.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + poll.contributor.firstName + ' ' + poll.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF REQUESTED SECTION -->
+
+<!-- NEW SECTION -->
+<div id="new_section" class="col s12" th:if="${me.type.name() != 'REGULAR'}">
+    <div th:each="poll : ${polls}" class='card col s12' th:if="${poll.status.name() == 'CREATED' && poll.contributor == me}">
+        <div class="row">
+            <h4 th:text='${poll.title}' class="col s8 m10 underline" style="font-family: monospace"></h4>
+            <p class="col s2 m1">
+                <a href="#" th:onclick="showAddEditModal('Poll', JSON.parse(/*[[${poll.toJSON()}]]*/), '/images/avatar.png', false, false)" >
+                    <i class="material-icons blue-text">edit</i>
+                </a>
+            </p>
+            <p class="col s2 m1">
+                <a href="#" th:onclick="showConfirmModal('Poll', 'Delete', '/contributor/delete/poll/[[${poll.id}]]')">
+                    <i class="material-icons red-text">delete</i>
+                </a>
+            </p>
+            <blockquote th:text='${poll.body}' class="col s12 flow-text"></blockquote>
+
+            <div class="col s12">
+                <div class="chip" th:each="tag : ${poll.tags}">
+                    <i class="material-icons amber-text normal">local_offer</i>
+                    <span th:text="${tag.tag.name}" class="black-text"></span>
+                    <a href="#" th:onclick="showConfirmModal('Poll Tag', 'Remove', '/contributor/delete/poll_tag/[[${tag.id}]]')">
+                        <i class="material-icons red-text normal">close</i>
+                    </a>
+                </div>
+                <div class="chip blue">
+                    <a href='#' th:onclick='showAddEditModal("Polls Tag", false, "/images/avatar.png", "sub_add_edit", JSON.parse("{\"poll\": [[${poll.id}]]}"))'>
+                        <span class="white-text">Add Tag</span>
+                        <i class="material-icons white-text normal">add</i>
+                    </a>
+                </div>
+
+                <div class="chip pink" th:each="item : ${poll.items}">
+                    <i class="material-icons amber-text normal">grade</i>
+                    <span th:text="${item.name}" class="white-text"></span>
+                    <a href="#" th:onclick="showConfirmModal('Poll Item', 'Remove', '/contributor/delete/poll_item/[[${item.id}]]')">
+                        <i class="material-icons white-text normal">close</i>
+                    </a>
+                </div>
+
+                <div class="chip orange" th:if="${poll.items.size() < 5}">
+                    <a href='#' th:onclick='showAddEditModal("Poll Item", false, "/images/avatar.png", "sub2_add_edit", JSON.parse("{\"poll\": [[${poll.id}]]}"))'>
+                        <span class="white-text">Add Item</span>
+                        <i class="material-icons white-text normal">add</i>
+                    </a>
+                </div>
+
+
+                <div class="chip green" th:if="${poll.items.size() >= 2}">
+                    <a href='#' th:onclick="showConfirmModal('Poll', 'Send Approval Request', '/contributor/save/update_poll_status/[[${poll.id}]]/1')">
+                        <span class="white-text">Send</span>
+                        <i class="material-icons white-text normal">send</i>
+                    </a>
+                </div>
+                <div class="chip orange-text">
+                    <span class="orange-text" th:text="${poll.expiry.name()}"></span>
+                    <i class="material-icons normal orange-text">timer</i>
+                </div>
+                <div class='chip right'>
+                    <img th:src="${IMG_BASE + poll.contributor.imageUrl}" onerror="this.src='/images/avatar.png'"/>
+                    <b class="right black-text" th:text="${'By: ' + poll.contributor.firstName + ' ' + poll.contributor.lastName}"></b>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END OF NEW SECTION -->
+
+<div id="add_edit_modal" class="modal modal-fixed-footer">
+    <form id="add_edit_form" class="row" method="post" th:action="@{/contributor/save/poll}">
+        <div class="modal-content container">
+            <h4 id='add_edit_label' class="col s12 purple-text center-align"></h4>
+            <input type="hidden" id='id' name="id" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Title" class='' name='title' id='title' maxlength="30" required=""/>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <textarea placeholder="Poll Description" class='materialize-textarea' data-length="150" maxlength="150" name='body' id='body' required=""></textarea>
+                </div>
+            </div>
+
+            <div class='row'>
+                <div class="input-field col s12 purple-text">
+                    <i class="material-icons prefix">arrow_drop_down_circle</i>
+                    <select id='expiry' name="expiry" required="">
+                        <option value="" disabled selected="">Choose your option</option>
+                        <option value="DAY">Last for a day</option>
+                        <option value="DAY_3">Last for 3 days</option>
+                        <option value="WEEK">Last for a week</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub_add_edit_form" class="row" method="post" th:action="@{/contributor/save/poll_tag}">
+        <div class="modal-content container">
+            <h4 id='sub_add_edit_label' class="col s12 purple-text center-align">Add Poll Tag</h4>
+            <input id='poll' name="poll" type="hidden" value='-1' hidden='' required=""/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Tag" class='autocomplete' name='tag_name' id='tag_name' required="" autocomplete="off"/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="sub2_add_edit_modal" class="modal modal-fixed-footer">
+    <form id="sub2_add_edit_form" class="row" method="post" th:action="@{'/contributor/save/poll_item'}">
+        <div class="modal-content container">
+            <h4 id='sub2_add_edit_label' class="col s12 purple-text center-align"></h4>
+            <input type="hidden" id='poll' name="poll" value='-1' hidden=''/>
+            <div class='row'>
+                <div class='input-field col s12 purple-text'>
+                    <i class="material-icons prefix">border_color</i>
+                    <input placeholder="Poll Item Name" class='materialize-textarea' data-length="50" maxlength="50" name='name' id='name' required=""/>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i> Close</a>
+            <button type='submit' id="sub2_add_edit_button" class='btn waves-effect purple'>
+            </button>
+        </div>
+    </form>
+</div>
+
+<div id="confirm_modal" class="modal">
+    <div class="modal-content">
+        <h4 class="blue-text">Confirmation !!!</h4>
+        <h6 id="confirm_modal_message">This action is cannot be undone</h6>
+        <h6 class="red-text">This action is cannot be undone</h6>
+    </div>
+    <div class="modal-footer">
+        <a class="modal-close waves-effect waves-red btn-flat red-text"><i class='material-icons left'>close</i>No</a>
+        <a id="confirm_modal_link" href="#!" class="blue white-text modal-close waves-effect waves-red btn-flat"><i class='material-icons left'>check</i>Yes</a>
+    </div>
+</div>
+
+<div id="page_modal" class="modal bottom-sheet">
+    <div class="modal-content">
+        <div id='page' class="row"></div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('.fixed-action-btn').floatingActionButton();
+        $('.modal').modal();
+        $('select').formSelect();
+        $('textarea').characterCounter();
+        $('.tooltipped').tooltip();
+        $('.materialboxed').materialbox();
+        $('.carousel.carousel-slider').carousel({
+            fullWidth: true
+        });
+        $('.tabs').tabs();
+        var tags = [];
+        var counter = 0;
+        /*[# th:each="tag : ${tags}"]*/
+        tags[counter++] = /*[[${tag.name}]]*/'';
+        /*[/]*/
+        var data = {};
+        for (var i in tags) {
+            data[tags[i]] = "/images/tag.png";
+        }
+        $('input.autocomplete').autocomplete({
+            data: data
+        });
+
+        /*[# th:each="data : ${voteData}"]*/
+        var id = /*[[${data[0]}]]*/'';
+        var labels = JSON.parse(/*[[${data[1]}]]*/'');
+        var data = JSON.parse(/*[[${data[2]}]]*/'');
+        var count = /*[[${data[3]}]]*/0;
+        initChart('voteChartBar'+ id, 'bar', labels, data, count);
+        initChart('voteChartLine'+ id, 'line', labels, data, count);
+        initChart('voteChartPie'+ id, 'pie', labels, data, count);
+        initChart('voteChartDoughnut'+ id, 'doughnut', labels, data, count);
+        initChart('voteChartPolarArea'+ id, 'polarArea', labels, data, count);
+        /*[/]*/
+    });
+</script>
+
+<script>
+    function initChart(canvasId, type, labels, data, count) {
+        var ctx = document.getElementById(canvasId);
+        var myChart = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Vote count',
+                        data: data,
+                        backgroundColor: colors.slice(0, count),
+                        borderColor: borderColors.slice(0, count),
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                }
+            }
+        });
+    }
+    var colors = [
+        'rgba(255, 99, 132, 0.2)',
+        'rgba(54, 162, 235, 0.2)',
+        'rgba(255, 206, 86, 0.2)',
+        'rgba(75, 192, 192, 0.2)',
+        'rgba(153, 102, 255, 0.2)',
+        'rgba(255, 159, 64, 0.2)'
+    ];
+    var borderColors = [
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)'
+    ];
+</script>

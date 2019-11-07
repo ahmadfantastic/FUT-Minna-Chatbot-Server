@@ -7,8 +7,10 @@ package com.fut.chatbot.model;
 
 import com.fut.chatbot.util.Constants;
 import com.google.gson.annotations.Expose;
+import java.util.Arrays;
 import java.util.List;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -48,6 +50,7 @@ public class Answer {
     private int id;
 
     @Expose
+    @Column(length = 255)
     private String body;
 
     @Expose
